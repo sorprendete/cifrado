@@ -1,0 +1,24 @@
+/* Add styles for unread badge */
+.user-item {
+    position: relative;
+}
+
+.unread-badge {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--danger-color);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 12px;
+    box-shadow: 0 0 8px rgba(248, 81, 73, 0.5);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+    from { transform: translateY(-50%) scale(0); opacity: 0; }
+    to { transform: translateY(-50%) scale(1); opacity: 1; }
+}

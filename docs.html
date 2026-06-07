@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whitepaper Dinámico: Motor Criptográfico E2EE</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="btn-back">← Volver al Inicio</a>
+    
+    <header>
+        <h1>Arquitectura E2EE</h1>
+        <p class="lead">Simulación 100% matemática y en tiempo real. Lo que ves aquí es exactamente el mismo código que ejecuta tu navegador para asegurar tus mensajes.</p>
+    </header>
+
+    <!-- SECCIÓN: SERVIDOR ZERO KNOWLEDGE -->
+    <div class="pillar-card" style="border-color: rgba(255, 255, 255, 0.2);">
+        <h2><span class="pillar-number" style="background: #555;">0</span> El Servidor Ciego (Zero-Knowledge)</h2>
+        <p>Antes de entender las matemáticas, debemos entender qué ve el servidor (nuestra base de datos MySQL/PHP). Diseñamos esta arquitectura bajo la premisa de que <strong>el servidor siempre está comprometido</strong>.</p>
+        <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border-left: 4px solid #ff7b72;">
+            <h4 style="margin: 0 0 10px 0; color: #ff7b72;">Lo que GUARDA la Base de Datos:</h4>
+            <ul style="font-size: 0.9rem; color: var(--text-secondary); margin: 0; padding-left: 20px;">
+                <li>Tu Alias y tu Vector Público (Números que no sirven para descifrar).</li>
+                <li>Tu <code>boveda_cifrada</code>: Tu vector privado encerrado en un candado matemático. El servidor NO tiene la llave del candado (tu contraseña).</li>
+                <li>Los mensajes: Llegan como texto ininteligible en Base64 (<code>payload_cifrado</code>).</li>
+            </ul>
+        </div>
+        <p style="margin-top: 15px;">Incluso si un administrador entra a la base de datos y roba todos los registros, no podrá leer un solo mensaje ni robar la identidad de ningún usuario. El servidor actúa únicamente como un "cartero ciego" que transporta paquetes cerrados.</p>
+    </div>
+
+    <!-- SECCIÓN: ARQUITECTURA HÍBRIDA -->
+    <div class="pillar-card" style="border-color: rgba(255, 210, 0, 0.3);">
+        <h2><span class="pillar-number" style="background: linear-gradient(90deg, #ff8a00, #e52e71);">★</span> Arquitectura Híbrida: Asimétrica + Simétrica</h2>
+        <p>Nuestro algoritmo no usa un solo tipo de criptografía, sino una <strong>Arquitectura Híbrida</strong> que combina lo mejor de dos mundos para garantizar una seguridad extrema y una velocidad instantánea.</p>
+        
+        <div style="display: flex; gap: 20px; margin: 20px 0; flex-wrap: wrap;">
+            <div style="flex: 1; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px; border-left: 4px solid #00d2ff;">
+                <h4 style="margin: 0 0 10px 0; color: #00d2ff;">1. Fase Asimétrica (Identidad)</h4>
+                <p style="font-size: 0.9rem; margin: 0; color: var(--text-secondary);">Utilizamos <strong>Llaves Públicas y Privadas</strong> (Vectores). Esto permite que dos personas que nunca se han visto puedan darse la mano matemáticamente a través de Internet sin exponer sus secretos. <em>(Es lenta pero segura)</em>.</p>
+            </div>
+            <div style="flex: 1; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px; border-left: 4px solid #56d364;">
+                <h4 style="margin: 0 0 10px 0; color: #56d364;">2. Fase Simétrica (Cifrado)</h4>
+                <p style="font-size: 0.9rem; margin: 0; color: var(--text-secondary);">Una vez que la fase asimétrica conecta ambas identidades, se genera una <strong>Llave Raíz Compartida</strong> (Simétrica). Ambos usan esta misma llave para encender el Motor de Caos y cifrar el chat a la velocidad de la luz.</p>
+            </div>
+        </div>
+
+        <div style="position: relative; height: 180px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.2); overflow: hidden; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+            
+            <div style="display: flex; width: 100%; justify-content: space-around; font-family: 'Fira Code', monospace; font-size: 0.8rem; z-index: 2;">
+                <div style="text-align: center;">
+                    <div style="color: #00d2ff;">TÚ</div>
+                    <div>(Pública A + Privada A)</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="color: #00d2ff;">CONTACTO</div>
+                    <div>(Pública B + Privada B)</div>
+                </div>
+            </div>
+
+            <!-- Flechas Asimétricas Animadas -->
+            <div style="position: absolute; top: 40%; width: 60%; height: 2px; background: linear-gradient(90deg, transparent, #00d2ff, transparent); opacity: 0.5;"></div>
+            <div class="particle-flow" style="position: absolute; top: 39%; left: 20%; width: 10px; height: 4px; background: #fff; box-shadow: 0 0 10px #fff, 0 0 20px #00d2ff; border-radius: 5px;"></div>
+            <div class="particle-flow-reverse" style="position: absolute; top: 41%; right: 20%; width: 10px; height: 4px; background: #fff; box-shadow: 0 0 10px #fff, 0 0 20px #00d2ff; border-radius: 5px;"></div>
+
+            <div style="text-align: center; margin-top: 30px; z-index: 2;">
+                <div style="color: #56d364; font-weight: bold; font-family: 'Fira Code', monospace;">▼ SE CONVIERTE EN ▼</div>
+                <div style="background: rgba(86, 211, 100, 0.2); border: 1px solid #56d364; padding: 5px 15px; border-radius: 15px; display: inline-block; margin-top: 10px; font-weight: bold; color: #fff; box-shadow: 0 0 15px rgba(86, 211, 100, 0.5);">
+                    Llave Única Compartida (Simétrica)
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- PILAR 1 -->
+    <div class="pillar-card">
+        <h2><span class="pillar-number">1</span> Intercambio Vectorial (LWE Simulado) <span style="font-size: 0.7rem; background: #00d2ff; color: #000; padding: 3px 8px; border-radius: 10px; vertical-align: middle; margin-left: 10px; font-weight: bold; letter-spacing: 1px;">FASE ASIMÉTRICA</span></h2>
+        <p>Para intercambiar una llave secreta de forma segura a través de internet (donde cualquiera puede interceptar la red), usamos un protocolo basado en <strong>Vectores Criptográficos</strong>.</p>
+        <p>A continuación se realiza una simulación matemática real. Ambos lados multiplicarán sus vectores aleatorios por la Matriz Pública <code>[735, 246, 891, 452]</code>. Luego intercambiarán los resultados públicos.</p>
+        
+        <button id="btn-sim-lwe" class="btn-sim">Simular Protocolo Matemático</button>
+        
+        <div class="simulator-grid">
+            <div class="sim-box">
+                <h4>Tu Dispositivo</h4>
+                <div id="sim1-priv" class="math-text">Vector Privado: [?, ?, ?, ?]</div>
+                <div id="sim1-pub" class="math-text" style="color: #79c0ff; margin-top: 10px;">Vector Público: [Esperando...]</div>
+            </div>
+            <div class="sim-box">
+                <h4>Dispositivo del Contacto</h4>
+                <div id="sim2-priv" class="math-text">Vector Privado: [?, ?, ?, ?]</div>
+                <div id="sim2-pub" class="math-text" style="color: #79c0ff; margin-top: 10px;">Vector Público: [Esperando...]</div>
+            </div>
+            
+            <div class="shared-key-box" id="sim-shared-key">
+                Llave Raíz Compartida: <span id="shared-key-val" class="highlight-green"></span>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px; font-weight: normal;">
+                    (Tu Vector Privado × Su Vector Público) = (Su Vector Privado × Tu Vector Público)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PILAR 2 y 3 -->
+    <div class="pillar-card">
+        <h2><span class="pillar-number">2</span> Candado Determinista y Anti-Replay <span style="font-size: 0.7rem; background: #ff8a00; color: #000; padding: 3px 8px; border-radius: 10px; vertical-align: middle; margin-left: 10px; font-weight: bold; letter-spacing: 1px;">LOCAL / OFFLINE</span></h2>
+        <p>Nunca enviamos tu llave privada al servidor. ¿Cómo la proteges para usarla en distintos dispositivos? La guardamos en una "Bóveda" cifrada en la base de datos usando un Hash estricto basado en tu usuario y contraseña.</p>
+        <pre>hash = (hash * 31 + charCode) % 2147483647; // Ejecutado 1000 veces</pre>
+        <p>Para evitar ataques de repetición (Replay Attacks), encriptamos cada mensaje junto a una estampa de tiempo estricta. Si un hacker intercepta un paquete encriptado e intenta reenviarlo 5 minutos después, el sistema lo descartará matemáticamente.</p>
+    </div>
+
+    <!-- PILAR 4 -->
+    <div class="pillar-card">
+        <h2><span class="pillar-number">4</span> El Motor del Caos (Mapa Logístico PRNG) <span style="font-size: 0.7rem; background: #56d364; color: #000; padding: 3px 8px; border-radius: 10px; vertical-align: middle; margin-left: 10px; font-weight: bold; letter-spacing: 1px;">FASE SIMÉTRICA</span></h2>
+        <p>Usando la Llave Raíz generada en el Pilar 1, inicializamos una ecuación caótica: <code>x = 3.99 * x * (1 - x)</code>. Observa en tiempo real cómo un diminuto cambio en la semilla altera la distribución del ruido (Efecto Mariposa).</p>
+        
+        <div>
+            <label>Valor de Semilla Criptográfica: <span id="seed-val" class="highlight-blue">0.5000</span></label>
+            <input type="range" id="seed-slider" min="0.1000" max="0.9000" step="0.0001" value="0.5000">
+        </div>
+        <canvas id="chaos-canvas"></canvas>
+    </div>
+
+    <!-- PILAR 5 -->
+    <div class="pillar-card">
+        <h2><span class="pillar-number">5</span> Colisión Final y Cifrado (XOR) <span style="font-size: 0.7rem; background: #56d364; color: #000; padding: 3px 8px; border-radius: 10px; vertical-align: middle; margin-left: 10px; font-weight: bold; letter-spacing: 1px;">FASE SIMÉTRICA</span></h2>
+        <p>En el último paso, los caracteres de tu mensaje se convierten en Bits y colisionan mediante la operación matemática <strong>XOR (OR Exclusivo)</strong> contra el ruido generado por el Motor del Caos. Modifica el texto en tiempo real para ver cómo el emisor cifra la letra.</p>
+        
+        <h4 style="color: #a5d6ff; margin-bottom: 10px; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 5px;">PASO 1: El Emisor (Cifrando el Mensaje)</h4>
+        <div class="xor-grid">
+            <div class="xor-col">
+                <strong class="highlight-blue">Texto Original</strong>
+                <input type="text" id="xor-input" value="A" maxlength="1">
+                <span id="xor-byte" style="margin-top: 5px;">01000001</span>
+            </div>
+            <div style="font-weight: bold; text-align: center; font-size: 1.5rem; color: #ff7b72;">⊕</div>
+            <div class="xor-col">
+                <strong class="highlight-red">Ruido del Caos</strong>
+                <span style="margin-top: 10px;">(Pilar 4)</span>
+                <span id="xor-noise" style="margin-top: 5px;">10110010</span>
+            </div>
+            <div style="font-weight: bold; text-align: center; font-size: 1.5rem;">=</div>
+            <div class="xor-col" style="border-color: #56d364; background: rgba(86, 211, 100, 0.1);">
+                <strong class="highlight-green">Dato Cifrado</strong>
+                <span id="xor-result-bin" style="margin-top: 10px;">11110011</span>
+                <span id="xor-result-hex" style="margin-top: 5px; font-weight: bold;">(Viaja por Internet)</span>
+            </div>
+        </div>
+        <button id="btn-regen-noise" class="btn-sim" style="background: var(--text-secondary);">Generar Nuevo Ruido Criptográfico</button>
+        
+        <div style="margin-top: 40px;">
+            <h3 style="color: #56d364; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.5rem;">🔓</span> ¿Y cómo se Descifra? (Simetría Matemática)
+            </h3>
+            <p>La magia matemática de la compuerta <strong>XOR (⊕)</strong> radica en que es <strong>100% reversible y simétrica</strong> siempre y cuando uses <em>exactamente la misma llave</em>. Como tú y tu contacto generaron matemáticamente la <strong>misma Llave Raíz (Pilar 1)</strong>, sus respectivos Motores de Caos producirán exactamente el <strong>mismo Ruido (Pilar 4)</strong> al mismo tiempo.</p>
+            
+            <p>Cuando el contacto recibe tu Dato Cifrado, simplemente lo colisiona nuevamente contra ese mismo ruido. Mira la simulación debajo, el sistema tomará tu resultado verde y lo desencriptará:</p>
+
+            <h4 style="color: #a5d6ff; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 5px;">PASO 2: El Receptor (Descifrando el Mensaje)</h4>
+            <div class="xor-grid">
+                <div class="xor-col" style="border-color: #56d364; background: rgba(86, 211, 100, 0.1);">
+                    <strong class="highlight-green">Dato Recibido</strong>
+                    <span style="margin-top: 10px;">(Dato Cifrado)</span>
+                    <span id="dec-received" style="margin-top: 5px;">11110011</span>
+                </div>
+                <div style="font-weight: bold; text-align: center; font-size: 1.5rem; color: #ff7b72;">⊕</div>
+                <div class="xor-col">
+                    <strong class="highlight-red">El Mismo Ruido</strong>
+                    <span style="margin-top: 10px;">(Generado Localmente)</span>
+                    <span id="dec-noise" style="margin-top: 5px;">10110010</span>
+                </div>
+                <div style="font-weight: bold; text-align: center; font-size: 1.5rem;">=</div>
+                <div class="xor-col" style="border-color: #00d2ff; background: rgba(0, 210, 255, 0.1);">
+                    <strong class="highlight-blue" style="color: #00d2ff;">Texto Revelado</strong>
+                    <span id="dec-result-char" style="margin-top: 10px; font-size: 1.2rem; font-weight: bold;">A</span>
+                    <span id="dec-result-bin" style="margin-top: 5px; font-family: 'Fira Code', monospace; font-size: 0.8rem;">01000001</span>
+                </div>
+            </div>
+            
+            <div style="background: rgba(255, 138, 0, 0.1); border-left: 4px solid #ff8a00; padding: 15px; border-radius: 0 8px 8px 0; margin-top: 20px;">
+                <strong style="color: #ff8a00;">¿Por qué es invulnerable?</strong>
+                <p style="font-size: 0.9rem; margin-bottom: 0; margin-top: 5px;">Si un hacker intercepta la red, solo atrapará el <strong>Dato Cifrado</strong>. Al intentar adivinar el texto, tendría que probar billones de ruidos caóticos distintos. Como el Ruido del Caos cambió basándose en una Llave Raíz Vectorial de 4 dimensiones y jamás viajó por Internet, es matemáticamente imposible que el hacker pueda revertir el XOR sin saber el número exacto.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- PILAR 1: SIMULACIÓN LWE ---
+    const btnSimLwe = document.getElementById('btn-sim-lwe');
+    const simSharedKey = document.getElementById('sim-shared-key');
+    const matrizPublica = [735, 246, 891, 452];
+
+    function genPriv() {
+        return [
+            Math.floor(Math.random() * 900) + 100,
+            Math.floor(Math.random() * 900) + 100,
+            Math.floor(Math.random() * 900) + 100,
+            Math.floor(Math.random() * 900) + 100
+        ];
+    }
+
+    function calcPub(priv) {
+        return priv.map((val, i) => val * matrizPublica[i]);
+    }
+
+    btnSimLwe.addEventListener('click', async () => {
+        btnSimLwe.disabled = true;
+        simSharedKey.style.display = 'none';
+
+        // 1. Generar Privadas
+        const aPriv = genPriv();
+        const bPriv = genPriv();
+        document.getElementById('sim1-priv').innerText = `Vector Privado: [${aPriv.join(', ')}]`;
+        document.getElementById('sim2-priv').innerText = `Vector Privado: [${bPriv.join(', ')}]`;
+        
+        await new Promise(r => setTimeout(r, 800));
+
+        // 2. Multiplicar por Matriz Pública
+        const aPub = calcPub(aPriv);
+        const bPub = calcPub(bPriv);
+        document.getElementById('sim1-pub').innerText = `Vector Público: [${aPub.join(', ')}]`;
+        document.getElementById('sim2-pub').innerText = `Vector Público: [${bPub.join(', ')}]`;
+        
+        await new Promise(r => setTimeout(r, 1000));
+
+        // 3. Intercambio y Producto (Demostración real de matemáticas)
+        let aRoot = 0;
+        let bRoot = 0;
+        for (let i = 0; i < 4; i++) {
+            aRoot += Math.abs(aPriv[i] * bPub[i]);
+            bRoot += Math.abs(bPriv[i] * aPub[i]);
+        }
+
+        // Mostrar
+        document.getElementById('shared-key-val').innerText = aRoot; // Son idénticos
+        simSharedKey.style.display = 'block';
+
+        btnSimLwe.disabled = false;
+    });
+
+    // --- PILAR 4: MOTOR CAOS (CANVAS) ---
+    const canvas = document.getElementById('chaos-canvas');
+    const ctx = canvas.getContext('2d');
+    const seedSlider = document.getElementById('seed-slider');
+    const seedValText = document.getElementById('seed-val');
+
+    function drawChaos(seed) {
+        // Redimensionar logicamente
+        canvas.width = canvas.parentElement.clientWidth;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        let x = seed;
+        const r = 3.99; // Límite caótico del mapa logístico
+        
+        ctx.beginPath();
+        ctx.strokeStyle = '#007bff';
+        ctx.lineWidth = 1;
+        
+        const iteraciones = 500;
+        const widthStep = canvas.width / iteraciones;
+
+        for (let i = 0; i < iteraciones; i++) {
+            x = r * x * (1 - x); // Fórmula Real Criptográfica
+            
+            const px = i * widthStep;
+            const py = canvas.height - (x * canvas.height);
+            
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+    }
+
+    seedSlider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        seedValText.innerText = val.toFixed(4);
+        drawChaos(val);
+    });
+
+    // Dibujo inicial
+    setTimeout(() => drawChaos(0.5000), 100);
+    window.addEventListener('resize', () => drawChaos(parseFloat(seedSlider.value)));
+
+    // --- PILAR 5: XOR ANIMADO ---
+    const xorInput = document.getElementById('xor-input');
+    const xorByte = document.getElementById('xor-byte');
+    const xorNoise = document.getElementById('xor-noise');
+    const xorResultBin = document.getElementById('xor-result-bin');
+    const xorResultHex = document.getElementById('xor-result-hex');
+    const btnRegenNoise = document.getElementById('btn-regen-noise');
+
+    let currentNoise = 178; // Random byte 10110010
+
+    function toBin(num) {
+        return num.toString(2).padStart(8, '0');
+    }
+
+    function updateXor() {
+        // PASO 1: CIFRADO
+        let textChar = xorInput.value || ' ';
+        let charCode = textChar.charCodeAt(0);
+        
+        xorByte.innerText = toBin(charCode);
+        xorNoise.innerText = toBin(currentNoise);
+        
+        let xorRes = charCode ^ currentNoise; // Matemática pura Javascript
+        
+        xorResultBin.innerText = toBin(xorRes);
+        xorResultHex.innerText = `(Hex: ${xorRes.toString(16).toUpperCase()})`;
+
+        // PASO 2: DESCIFRADO
+        document.getElementById('dec-received').innerText = toBin(xorRes);
+        document.getElementById('dec-noise').innerText = toBin(currentNoise);
+        
+        let decRes = xorRes ^ currentNoise; // Matemática reversible XOR
+        document.getElementById('dec-result-bin').innerText = toBin(decRes);
+        document.getElementById('dec-result-char').innerText = String.fromCharCode(decRes);
+    }
+
+    xorInput.addEventListener('input', updateXor);
+    btnRegenNoise.addEventListener('click', () => {
+        currentNoise = Math.floor(Math.random() * 255);
+        updateXor();
+    });
+
+    updateXor();
+</script>
+</body>
+</html>

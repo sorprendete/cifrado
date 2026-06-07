@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bóveda E2EE - Ingreso</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Modal de Registro (Glassmorphism) -->
+    <div id="login-modal" class="modal-overlay" style="position: relative; background: transparent;">
+        <!-- Elementos decorativos de fondo para el Glassmorphism -->
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+        
+        <div class="modal">
+            <div class="modal-header">
+                <div class="icon-lock">🔐</div>
+                <h2>Bóveda E2EE</h2>
+                <p>Identidad Criptográfica de Conocimiento Cero</p>
+            </div>
+            
+            <div class="modal-body" id="view-login">
+                <h3 style="color: #fff; margin-bottom: 15px; font-size: 1.1rem; text-align: center;">Iniciar Sesión</h3>
+                <div class="input-group">
+                    <label for="login-username">Usuario Secreto</label>
+                    <input type="text" id="login-username" placeholder="Tu usuario privado" autocomplete="off">
+                </div>
+                
+                <div class="input-group">
+                      <label for="login-password">Contraseña Secreta</label>
+                      <div style="position: relative;">
+                          <input type="password" id="login-password" placeholder="Desbloquea tu bóveda" style="width: 100%; padding-right: 40px;">
+                          <span onclick="togglePassword('login-password', this)" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; filter: grayscale(1);">👁️</span>
+                      </div>
+                  </div>
+                
+                <div class="action-buttons">
+                    <button id="btn-login" class="btn-primary" style="width: 100%;">Ingresar a Bóveda</button>
+                </div>
+                <div style="text-align: center; margin-top: 15px;">
+                    <a href="#" id="link-to-register" style="color: var(--accent-color); text-decoration: none; font-size: 0.9rem;">¿No tienes bóveda? Créala aquí</a>
+                </div>
+            </div>
+
+            <div class="modal-body hidden" id="view-register">
+                <h3 style="color: #fff; margin-bottom: 15px; font-size: 1.1rem; text-align: center;">Crear Bóveda</h3>
+                
+                <div class="input-group">
+                    <label for="reg-alias">Alias Público (El que todos verán)</label>
+                    <input type="text" id="reg-alias" placeholder="Ej: Alfa" autocomplete="off">
+                </div>
+
+                <div class="input-group">
+                    <label for="reg-username">Usuario Secreto (Solo para entrar)</label>
+                    <input type="text" id="reg-username" placeholder="Ej: john_doe_99" autocomplete="off">
+                </div>
+                
+                <div class="input-group">
+                      <label for="reg-password">Contraseña Secreta</label>
+                      <div style="position: relative;">
+                          <input type="password" id="reg-password" placeholder="Tu llave maestra" style="width: 100%; padding-right: 40px;">
+                          <span onclick="togglePassword('reg-password', this)" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; filter: grayscale(1);">👁️</span>
+                      </div>
+                  </div>
+                
+                <div class="action-buttons">
+                    <button id="btn-register" class="btn-secondary" style="width: 100%;">Generar Bóveda</button>
+                </div>
+                <div style="text-align: center; margin-top: 15px;">
+                    <a href="#" id="link-to-login" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;">Ya tengo una bóveda. Iniciar Sesión</a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                Algoritmo manual de 5 Pilares. Todo ocurre en tu navegador.<br>
+                <a href="docs.html" target="_blank" style="color: var(--accent-color); text-decoration: none; font-weight: bold; margin-top: 10px; display: inline-block;">📘 Leer Documentación Técnica</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/crypto.js"></script>
+    <script src="js/login.js"></script>
+    <script>
+        function togglePassword(inputId, iconElement) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                iconElement.style.filter = 'grayscale(0)';
+            } else {
+                input.type = 'password';
+                iconElement.style.filter = 'grayscale(1)';
+            }
+        }
+    </script>
+</body>
+</html>

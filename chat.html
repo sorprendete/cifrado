@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E2EE Secure Chat</title>
+    <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+    <!-- Contenedor Principal -->
+    <div class="container" id="app-container">
+        <!-- Barra Lateral -->
+        <div class="sidebar">
+            <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h3 id="my-alias" style="margin-bottom: 4px; font-size: 1.1rem; color: var(--accent-color);">Usuario</h3>
+                    <div id="my-public-key" style="font-family: monospace; font-size: 0.75rem; color: var(--text-secondary); background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px; display: inline-block;">ID: ...</div>
+                </div>
+            </div>
+            
+            <!-- Modal de Perfil -->
+            <div id="profile-modal" class="modal-overlay hidden">
+                <div class="modal" style="width: 90%; max-width: 350px; padding: 20px;">
+                    <h3 style="color:#fff; margin-bottom: 15px;">Ajustes de Bóveda</h3>
+                    
+                    <div class="input-group">
+                        <label>Nuevo Alias Público</label>
+                        <input type="text" id="profile-alias" placeholder="Tu alias visible">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Contraseña Actual</label>
+                        <div style="position: relative;">
+                            <input type="password" id="profile-old-pass" placeholder="Para validar identidad" style="width: 100%; padding-right: 40px;">
+                            <span onclick="togglePassword('profile-old-pass', this)" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; filter: grayscale(1);">👁️</span>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Nueva Contraseña</label>
+                        <div style="position: relative;">
+                            <input type="password" id="profile-new-pass" placeholder="Nueva contraseña secreta" style="width: 100%; padding-right: 40px;">
+                            <span onclick="togglePassword('profile-new-pass', this)" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; filter: grayscale(1);">👁️</span>
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; gap: 10px;">
+                        <button id="btn-save-profile" class="btn-primary" style="padding: 10px; font-size: 0.9rem;">💾 Guardar</button>
+                        <button id="btn-close-profile" class="btn-secondary" style="padding: 10px; font-size: 0.9rem;">❌ Cerrar</button>
+                    </div>
+                    
+                    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
+
+                    <h4 style="color:#fff; margin-bottom: 10px;">Dispositivos Vinculados</h4>
+                    <div id="sessions-list" style="max-height: 150px; overflow-y: auto; margin-bottom: 15px; font-size: 0.8rem;">
+                        <p style="color:var(--text-secondary);">Cargando sesiones...</p>
+                    </div>
+                    
+                    <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
+                    
+                    <button onclick="localStorage.removeItem('e2ee_identity'); window.location.href='index.html'" style="width: 100%; padding: 10px; background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; cursor: pointer; font-size: 0.9rem; margin-bottom: 10px;">
+                        🚪 Cerrar Sesión
+                    </button>
+                    
+                    <button id="btn-delete-account" style="width: 100%; padding: 10px; background: rgba(248, 81, 73, 0.2); color: var(--danger-color); border: 1px solid var(--danger-color); border-radius: 8px; cursor: pointer; font-size: 0.9rem;">
+                        ⚠️ Eliminar Mi Cuenta Permanentemente
+                    </button>
+                </div>
+            </div>
+            <div class="user-list" id="user-list">
+                <!-- Usuarios cargados por JS -->
+            </div>
+            
+            <div style="padding: 15px; border-top: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-profile" class="btn-secondary" style="flex: 1; padding: 10px; font-size: 0.9rem; text-align: left; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                        <span>⚙️</span> Perfil
+                    </button>
+                    <button onclick="localStorage.removeItem('e2ee_identity'); window.location.href='index.html'" class="btn-secondary" style="flex: 1; padding: 10px; font-size: 0.9rem; color: var(--danger-color); text-align: left; display: flex; align-items: center; justify-content: center; gap: 5px;">
+                        <span>🚪</span> Salir
+                    </button>
+                </div>
+                <a href="docs.html" target="_blank" style="text-align: center; color: var(--accent-color); text-decoration: none; font-size: 0.8rem; font-weight: bold;">📘 Documentación E2EE</a>
+            </div>
+        </div>
+
+        <!-- Área de Chat -->
+        <div class="chat-area">
+            <div class="chat-header" id="chat-header">
+                <div class="contact-info">
+                    <h3 id="current-contact-name">Selecciona un contacto</h3>
+                    <div class="security-status hidden" id="security-status">Conexión E2EE Establecida</div>
+                </div>
+                <div class="contact-fingerprint hidden" id="contact-fingerprint" style="font-family: monospace; font-size: 0.8rem; color: var(--accent-color); background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px;">
+                    <!-- Huella del contacto -->
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <!-- Los mensajes aparecerán aquí -->
+            </div>
+
+            <div style="position: relative; width: 100%; display: flex; flex-direction: column;">
+                
+                <!-- Contenedor de Emojis -->
+                <div id="emoji-picker" class="hidden" style="position: absolute; bottom: 60px; left: 0; background: rgba(13, 17, 23, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; max-height: 200px; overflow-y: auto; backdrop-filter: blur(10px); z-index: 100;">
+                    <!-- Emojis se llenan por JS -->
+                </div>
+
+                <!-- Contenedor de Pre-visualización Multimedia -->
+                <div id="media-preview-container" class="hidden" style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); background: rgba(13, 17, 23, 0.95); border: 1px solid var(--accent-color); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 99; max-width: 90%;">
+                    <div style="display: flex; justify-content: space-between; width: 100%;">
+                        <span style="color: var(--accent-color); font-weight: bold; font-size: 0.9rem;">Adjunto</span>
+                        <button id="btn-cancel-media" style="background: none; border: none; color: var(--danger-color); cursor: pointer; font-size: 1.2rem;">✖</button>
+                    </div>
+                    <div id="media-preview-content" style="max-height: 200px; overflow: hidden; display: flex; justify-content: center; align-items: center;">
+                    </div>
+                </div>
+
+                <div class="chat-input-area" id="chat-input-area" style="display: flex; gap: 10px; align-items: center;">
+                    <button id="btn-emoji" class="btn-secondary" style="padding: 10px; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center;" title="Emojis" disabled>😀</button>
+                    <input type="file" id="file-input" accept="image/*" style="display: none;">
+                    <button id="btn-attach" class="btn-secondary" style="padding: 10px; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center;" title="Adjuntar Imagen" disabled>📎</button>
+                    
+                    <input type="text" id="message-input" placeholder="Escribe un mensaje seguro..." disabled style="flex: 1;">
+                    
+                    <button id="btn-mic" class="btn-secondary" style="padding: 10px; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; background: var(--danger-color); color: white;" title="Grabar Audio" disabled>🎤</button>
+                    <button id="btn-send" disabled style="padding: 10px 20px;">Enviar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de Visualización (Laboratorio) -->
+        <div class="visualizer-area" id="visualizer-area">
+            <div class="sidebar-header">
+                <h2>Laboratorio Criptográfico</h2>
+            </div>
+            <div class="viz-content" id="viz-content">
+                <div class="viz-placeholder">Selecciona un contacto y envía/recibe mensajes para ver la matemática en tiempo real.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- DOMPurify para prevenir XSS al renderizar mensajes (permitido por ser seguridad estándar frontend, pero el cifrado es 100% custom) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script src="js/crypto.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        function togglePassword(inputId, iconElement) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                iconElement.style.filter = 'grayscale(0)';
+            } else {
+                input.type = 'password';
+                iconElement.style.filter = 'grayscale(1)';
+            }
+        }
+    </script>
+</body>
+</html>

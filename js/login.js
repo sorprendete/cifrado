@@ -20,12 +20,23 @@ const btnRegister = document.getElementById('btn-register');
 const regAlias = document.getElementById('reg-alias');
 const regUsername = document.getElementById('reg-username');
 const regPassword = document.getElementById('reg-password');
+const usernameError = document.getElementById('username-error');
 
 // Switch views
 linkToRegister.addEventListener('click', (e) => {
     e.preventDefault();
     viewLogin.classList.add('hidden');
     viewRegister.classList.remove('hidden');
+    // Limpiar campos y errores al abrir
+    regAlias.value = '';
+    regUsername.value = '';
+    regPassword.value = '';
+    if (usernameError) {
+        usernameError.style.display = 'none';
+    }
+    btnRegister.disabled = false;
+    btnRegister.style.opacity = "1";
+    btnRegister.style.cursor = "pointer";
 });
 
 linkToLogin.addEventListener('click', (e) => {
@@ -39,6 +50,45 @@ window.addEventListener('DOMContentLoaded', () => {
     if (localStorage.getItem('e2ee_identity')) {
         window.location.href = 'chat.html';
     }
+});
+
+let checkTimeout = null;
+regUsername.addEventListener('input', () => {
+    const nombre = regUsername.value.trim().toLowerCase();
+    
+    if (!nombre) {
+        usernameError.style.display = 'none';
+        btnRegister.disabled = false;
+        btnRegister.style.opacity = "1";
+        btnRegister.style.cursor = "pointer";
+        return;
+    }
+    
+    clearTimeout(checkTimeout);
+    checkTimeout = setTimeout(async () => {
+        try {
+            const res = await fetch(`api/verificar_usuario.php?nombre=${encodeURIComponent(nombre)}`);
+            const data = await res.json();
+            
+            if (data.existe) {
+                usernameError.innerText = "❌ Este usuario secreto ya está ocupado.";
+                usernameError.style.color = "#ff4444";
+                usernameError.style.display = "block";
+                btnRegister.disabled = true;
+                btnRegister.style.opacity = "0.6";
+                btnRegister.style.cursor = "not-allowed";
+            } else {
+                usernameError.innerText = "✅ ¡Usuario secreto disponible!";
+                usernameError.style.color = "#4caf50";
+                usernameError.style.display = "block";
+                btnRegister.disabled = false;
+                btnRegister.style.opacity = "1";
+                btnRegister.style.cursor = "pointer";
+            }
+        } catch (e) {
+            console.error("Error validando usuario", e);
+        }
+    }, 400);
 });
 
 let currentUser = {

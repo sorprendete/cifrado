@@ -48,13 +48,11 @@ try {
             $pdo_init->exec("
                 CREATE TABLE IF NOT EXISTS mensajes (
                     id INT AUTO_INCREMENT PRIMARY KEY,
-                    de_usuario_id INT NOT NULL,
-                    para_usuario_id INT NOT NULL,
+                    de_usuario_id VARCHAR(255) NOT NULL,
+                    para_usuario_id VARCHAR(255) NOT NULL,
                     payload_cifrado LONGTEXT NOT NULL,
                     entregado TINYINT(1) DEFAULT 0,
-                    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (de_usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-                    FOREIGN KEY (para_usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+                    creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             ");
             $pdo = new PDO($dsn, $user, $pass, $options);
@@ -64,5 +62,43 @@ try {
     } else {
         throw new \PDOException($e->getMessage(), (int)$e->getCode());
     }
+}
+
+// Helpers para ofuscación transparente de IDs de usuario en base de datos
+define('ID_ENCRYPTION_KEY', 'unsm_seguridad_secreta_2026');
+
+function ofuscar_id($id) {
+    if (empty($id)) return '';
+    $method = 'AES-128-ECB';
+    return base64_encode(openssl_encrypt((string)$id, $method, ID_ENCRYPTION_KEY, OPENSSL_RAW_DATA));
+}
+
+function desofuscar_id($cifrado) {
+    if (empty($cifrado)) return 0;
+    $method = 'AES-128-ECB';
+    $decrypted = openssl_decrypt(base64_decode($cifrado), $method, ID_ENCRYPTION_KEY, OPENSSL_RAW_DATA);
+    return $decrypted !== false ? (int)$decrypted : 0;
+}
+
+// Cifrado no-determinista (AES-128-CBC con IV aleatorio) para evitar análisis de tráfico del remitente
+function ofuscar_id_dinamico($id) {
+    if (empty($id)) return '';
+    $method = 'AES-128-CBC';
+    $iv_length = openssl_cipher_iv_length($method);
+    $iv = openssl_random_pseudo_bytes($iv_length);
+    $encrypted = openssl_encrypt((string)$id, $method, ID_ENCRYPTION_KEY, OPENSSL_RAW_DATA, $iv);
+    return base64_encode($iv . $encrypted);
+}
+
+function desofuscar_id_dinamico($cifrado) {
+    if (empty($cifrado)) return 0;
+    $method = 'AES-128-CBC';
+    $data = base64_decode($cifrado);
+    $iv_length = openssl_cipher_iv_length($method);
+    if (strlen($data) <= $iv_length) return 0;
+    $iv = substr($data, 0, $iv_length);
+    $encrypted = substr($data, $iv_length);
+    $decrypted = openssl_decrypt($encrypted, $method, ID_ENCRYPTION_KEY, OPENSSL_RAW_DATA, $iv);
+    return $decrypted !== false ? (int)$decrypted : 0;
 }
 ?>

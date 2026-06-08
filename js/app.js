@@ -38,6 +38,26 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('my-alias').innerText = currentUser.alias_publico || currentUser.nombre;
     document.getElementById('my-public-key').innerText = `ID: ${currentUser.llaves.publica.substring(0,16)}...`;
     
+    // Habilitar toggle oculto del Laboratorio Criptográfico con 5 clics en el alias
+    let aliasClicks = 0;
+    document.getElementById('my-alias').addEventListener('click', () => {
+        aliasClicks++;
+        if (aliasClicks >= 5) {
+            document.getElementById('visualizer-area').classList.toggle('hidden');
+            aliasClicks = 0;
+        }
+    });
+
+    // Habilitar acceso oculto a la documentación con 5 clics en la llave publica
+    let keyClicks = 0;
+    document.getElementById('my-public-key').addEventListener('click', () => {
+        keyClicks++;
+        if (keyClicks >= 5) {
+            window.open('docs.html', '_blank');
+            keyClicks = 0;
+        }
+    });
+
     cargarUsuarios();
     iniciarPolling();
 });
@@ -149,7 +169,7 @@ function abrirChat(user) {
 async function cargarHistorial(isPolling = false) {
     if (!currentContact) return;
     try {
-        const response = await fetch(`api/historial.php?usuario_id=${currentUser.id}&contacto_id=${currentContact.id}`);
+        const response = await fetch(`api/historial.php?usuario_id=${currentUser.id}&contacto_id=${currentContact.id}&token_sesion=${currentUser.token_sesion}`);
         const result = await response.json();
         
         if (result.success) {
@@ -212,10 +232,19 @@ function procesarMensajeDescifrado(msgId, textoDescifrado, timestamp, type) {
         return; // No renderizamos un nuevo globo, ya modificamos el existente
     }
 
-    mostrarMensajeUI(actualText, timestamp, type, msgId);
+    let isEphemeral = false;
+    let ephemeralDuration = 0;
+    if (textoDescifrado.startsWith('__EFIMERO__')) {
+        const parts = textoDescifrado.split('__');
+        ephemeralDuration = parseInt(parts[2]);
+        actualText = parts.slice(3).join('__');
+        isEphemeral = true;
+    }
+
+    mostrarMensajeUI(actualText, timestamp, type, msgId, isEphemeral, ephemeralDuration);
 }
 
-function mostrarMensajeUI(text, timestamp, type, msgId) {
+function mostrarMensajeUI(text, timestamp, type, msgId, isEphemeral = false, ephemeralDuration = 0) {
     if (document.querySelector(`.message[data-id="${msgId}"]`)) return;
 
     const div = document.createElement('div');
@@ -243,11 +272,52 @@ function mostrarMensajeUI(text, timestamp, type, msgId) {
         innerContent = `<audio controls src="${DOMPurify.sanitize(base64)}" class="chat-audio"></audio>`;
     }
 
+    let timerHtml = '';
+    if (isEphemeral) {
+        timerHtml = ` <span class="ephemeral-timer" style="color: var(--danger-color); font-size: 0.75rem; margin-left: 8px; font-weight: bold;">⏱️ ${ephemeralDuration}s</span>`;
+    }
+
     div.innerHTML = `
         ${actionsHtml}
         <div class="text">${innerContent}</div>
-        <div class="time">${time}</div>
+        <div class="time">${time}${timerHtml}</div>
     `;
+
+    if (isEphemeral && msgId) {
+        let timeLeft = ephemeralDuration;
+        const interval = setInterval(async () => {
+            timeLeft--;
+            const timerSpan = div.querySelector('.ephemeral-timer');
+            if (timerSpan) {
+                timerSpan.innerText = `⏱️ ${timeLeft}s`;
+            }
+            if (timeLeft <= 0) {
+                clearInterval(interval);
+                div.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                div.style.opacity = "0";
+                div.style.transform = "scale(0.9)";
+                setTimeout(() => {
+                    div.remove();
+                }, 500);
+                
+                if (type === 'them' && !msgId.toString().startsWith('temp_')) {
+                    try {
+                        await fetch('api/borrar_mensaje.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                usuario_id: currentUser.id,
+                                token_sesion: currentUser.token_sesion,
+                                mensaje_id: msgId
+                            })
+                        });
+                    } catch (e) {
+                        console.error('Error al borrar mensaje efímero', e);
+                    }
+                }
+            }
+        }, 1000);
+    }
     
     if (type === 'me' && msgId && !msgId.toString().startsWith('temp_')) {
         const btnEdit = div.querySelector('.btn-edit');
@@ -295,7 +365,8 @@ async function enviarComandoControl(comando, targetMsgId) {
             body: JSON.stringify({
                 de_usuario_id: currentUser.id,
                 para_usuario_id: currentContact.id,
-                payload_cifrado: payloadCifrado
+                payload_cifrado: payloadCifrado,
+                token_sesion: currentUser.token_sesion
             })
         });
     } catch (e) {
@@ -336,9 +407,14 @@ async function enviarMensaje() {
     const textoRaw = messageInput.value.trim();
     if (!textoRaw) return;
 
+    const ephemeralSelect = document.getElementById('ephemeral-select');
+    const ephemeralDuration = ephemeralSelect ? parseInt(ephemeralSelect.value) : 0;
+
     let textoFinal = textoRaw;
     if (editMessageId) {
         textoFinal = `__CTRL_EDIT__${editMessageId}__${textoRaw}`;
+    } else if (ephemeralDuration > 0) {
+        textoFinal = `__EFIMERO__${ephemeralDuration}__${textoRaw}`;
     }
 
     messageInput.value = '';
@@ -349,10 +425,17 @@ async function enviarMensaje() {
     let oldEditId = editMessageId;
     editMessageId = null; 
 
+    // Reset selector
+    if (ephemeralSelect) ephemeralSelect.value = "0";
+
     if (oldEditId) {
         procesarMensajeDescifrado(null, textoFinal, new Date().toISOString(), 'me');
     } else {
-        mostrarMensajeUI(textoRaw, new Date().toISOString(), 'me', tempMsgId);
+        if (ephemeralDuration > 0) {
+            mostrarMensajeUI(textoRaw, new Date().toISOString(), 'me', tempMsgId, true, ephemeralDuration);
+        } else {
+            mostrarMensajeUI(textoRaw, new Date().toISOString(), 'me', tempMsgId);
+        }
     }
 
     const vizBlock = iniciarBloqueVisualizador(oldEditId ? "Cifrando Edición" : "Cifrando (Envío)", "me");
@@ -367,7 +450,8 @@ async function enviarMensaje() {
             body: JSON.stringify({
                 de_usuario_id: currentUser.id,
                 para_usuario_id: currentContact.id,
-                payload_cifrado: payloadCifrado
+                payload_cifrado: payloadCifrado,
+                token_sesion: currentUser.token_sesion
             })
         });
         const result = await response.json();
@@ -490,7 +574,7 @@ async function cargarSesiones() {
         const res = await fetch('api/sesiones.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'list', usuario_id: currentUser.id })
+            body: JSON.stringify({ action: 'list', usuario_id: currentUser.id, token_sesion: currentUser.token_sesion })
         });
         const result = await res.json();
         
@@ -524,7 +608,7 @@ async function cargarSesiones() {
                         await fetch('api/sesiones.php', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ action: 'revoke', usuario_id: currentUser.id, sesion_id: sid })
+                            body: JSON.stringify({ action: 'revoke', usuario_id: currentUser.id, sesion_id: sid, token_sesion: currentUser.token_sesion })
                         });
                         cargarSesiones();
                     }
@@ -550,7 +634,7 @@ if (btnSaveProfile) {
         const oldPass = profileOldPass.value.trim();
         const newPass = profileNewPass.value.trim();
         
-        let updateData = { id: currentUser.id };
+        let updateData = { id: currentUser.id, token_sesion: currentUser.token_sesion };
         let changingPass = oldPass && newPass;
         
         if (newAlias && newAlias !== currentUser.alias_publico) {
@@ -610,7 +694,7 @@ if (btnDeleteAccount) {
             const response = await fetch('api/borrar_cuenta.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: currentUser.id })
+                body: JSON.stringify({ id: currentUser.id, token_sesion: currentUser.token_sesion })
             });
             const result = await response.json();
             
@@ -731,18 +815,31 @@ enviarMensaje = async function() {
     
     // Si hay un adjunto multimedia, enviarlo PRIMERO
     if (pendingMediaPayload) {
+        const ephemeralSelect = document.getElementById('ephemeral-select');
+        const ephemeralDuration = ephemeralSelect ? parseInt(ephemeralSelect.value) : 0;
+
         let tempMsgId = 'temp_media_' + Date.now();
-        mostrarMensajeUI(pendingMediaPayload, new Date().toISOString(), 'me', tempMsgId);
+        let finalMediaPayload = pendingMediaPayload;
+        
+        if (ephemeralDuration > 0) {
+            finalMediaPayload = `__EFIMERO__${ephemeralDuration}__${pendingMediaPayload}`;
+            mostrarMensajeUI(pendingMediaPayload, new Date().toISOString(), 'me', tempMsgId, true, ephemeralDuration);
+        } else {
+            mostrarMensajeUI(pendingMediaPayload, new Date().toISOString(), 'me', tempMsgId);
+        }
+
+        // Reset selector
+        if (ephemeralSelect) ephemeralSelect.value = "0";
         
         const vizBlock = iniciarBloqueVisualizador("Cifrando Adjunto", "me");
         const onLog = (etiqueta, datos) => agregarPasoVisualizador(vizBlock, etiqueta, datos);
-        const cifrado = MiCifrado.cifrarFinal(pendingMediaPayload, currentContact.rootKey, onLog);
+        const cifrado = MiCifrado.cifrarFinal(finalMediaPayload, currentContact.rootKey, onLog);
         
         try {
             await fetch('api/enviar.php', { 
                 method: 'POST', 
                 headers: {'Content-Type':'application/json'}, 
-                body: JSON.stringify({ de_usuario_id: currentUser.id, para_usuario_id: currentContact.id, payload_cifrado: cifrado }) 
+                body: JSON.stringify({ de_usuario_id: currentUser.id, para_usuario_id: currentContact.id, payload_cifrado: cifrado, token_sesion: currentUser.token_sesion }) 
             });
             // Ocultar previsualizacion
             pendingMediaPayload = null;

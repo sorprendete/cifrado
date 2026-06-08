@@ -97,53 +97,88 @@ btnRegister.addEventListener('click', async () => {
         btnRegister.innerText = "Generar Bóveda";
     }
 });
-
-// 2. LOGIN
+// 2. LOGIN CON PROTOCOLO CHALLENGE-RESPONSE ZERO-KNOWLEDGE
 btnLogin.addEventListener('click', async () => {
     const nombre = loginUsername.value.trim().toLowerCase();
     const password = loginPassword.value.trim();
     if (!nombre || !password) return alert('Ingresa usuario y contraseña.');
 
     btnLogin.disabled = true;
-    btnLogin.innerText = "Comprobando...";
+    btnLogin.innerText = "Solicitando desafío...";
     
     try {
-        const response = await fetch('api/login.php', {
+        // Paso 1: Solicitar desafío y datos de bóveda
+        const resChallenge = await fetch('api/login.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                nombre: nombre,
-                llave_publica: 'auth'
+                action: 'get_challenge',
+                nombre: nombre
             })
         });
-        const result = await response.json();
+        const challengeResult = await resChallenge.json();
         
-        if (result.success) {
-            const llaveCandado = MiCifrado.derivarLlaveCandado(nombre, password);
-            try {
-                const llavesDesempaquetadas = MiCifrado.desempaquetarBoveda(result.boveda_cifrada, llaveCandado);
-                if (llavesDesempaquetadas.publica !== result.llave_publica) {
-                    throw new Error("Contraseña incorrecta (la bóveda arrojó basura matemática).");
-                }
-                
-                currentUser.id = result.id;
-                currentUser.nombre = nombre;
-                currentUser.alias_publico = result.alias_publico;
-                currentUser.llaves = llavesDesempaquetadas;
-                currentUser.token_sesion = result.token_sesion;
-                
-                localStorage.setItem('e2ee_identity', JSON.stringify(currentUser));
-                window.location.href = 'chat.html';
-            } catch (decError) {
-                alert('Acceso Denegado: ' + decError.message);
-                btnLogin.disabled = false;
-                btnLogin.innerText = "Ingresar a Bóveda";
-            }
+        if (!challengeResult.success) {
+            alert('Acceso Denegado: ' + challengeResult.error);
+            btnLogin.disabled = false;
+            btnLogin.innerText = "Ingresar a Bóveda";
+            return;
+        }
+
+        btnLogin.innerText = "Desbloqueando bóveda local...";
+        
+        // Paso 2: Derivar llave de bóveda y descifrar
+        const llaveCandado = MiCifrado.derivarLlaveCandado(nombre, password);
+        const llavesDesempaquetadas = MiCifrado.desempaquetarBoveda(challengeResult.boveda_cifrada, llaveCandado);
+        
+        if (llavesDesempaquetadas.publica !== challengeResult.llave_publica) {
+            alert('Acceso Denegado: Contraseña incorrecta (la bóveda arrojó basura matemática).');
+            btnLogin.disabled = false;
+            btnLogin.innerText = "Ingresar a Bóveda";
+            return;
+        }
+        
+        btnLogin.innerText = "Resolviendo prueba ZK...";
+        
+        // Paso 3: Calcular la prueba de conocimiento cero usando el primer exponente del vector privado
+        const s_vector = llavesDesempaquetadas.privada.split(',').map(Number);
+        const s_0 = s_vector[0];
+        const modulo = 9999991;
+        
+        // S = T^s_0 (mod modulo)
+        const S = modExp(challengeResult.desafio, s_0, modulo);
+        // prueba = sha256(S)
+        const prueba = sha256(S.toString());
+        
+        btnLogin.innerText = "Validando firma en servidor...";
+        
+        // Paso 4: Enviar la prueba de conocimiento cero para obtener el token de sesión
+        const resLogin = await fetch('api/login.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'login',
+                nombre: nombre,
+                prueba: prueba
+            })
+        });
+        const loginResult = await resLogin.json();
+        
+        if (loginResult.success) {
+            currentUser.id = loginResult.id;
+            currentUser.nombre = nombre;
+            currentUser.alias_publico = loginResult.alias_publico;
+            currentUser.llaves = llavesDesempaquetadas;
+            currentUser.token_sesion = loginResult.token_sesion;
+            
+            localStorage.setItem('e2ee_identity', JSON.stringify(currentUser));
+            window.location.href = 'chat.html';
         } else {
-            alert('Acceso Denegado: ' + result.error);
+            alert('Acceso Denegado: ' + loginResult.error);
             btnLogin.disabled = false;
             btnLogin.innerText = "Ingresar a Bóveda";
         }
+        
     } catch (e) {
         alert('Error conectando con el servidor.');
         btnLogin.disabled = false;

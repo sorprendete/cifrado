@@ -1,5 +1,6 @@
 <?php
 require 'db.php';
+require 'auth.php';
 header('Content-Type: application/json');
 
 if (!isset($_GET['usuario_id']) || !isset($_GET['contacto_id'])) {
@@ -9,18 +10,35 @@ if (!isset($_GET['usuario_id']) || !isset($_GET['contacto_id'])) {
 
 $mi_id = (int)$_GET['usuario_id'];
 $contacto_id = (int)$_GET['contacto_id'];
+$token_sesion = $_GET['token_sesion'] ?? null;
+
+validar_sesion($mi_id, $token_sesion, $pdo);
+
 
 try {
-    // Buscar historial completo entre ambos usuarios
+    // Buscar historial completo basándonos en el destinatario (que es determinista)
+    // Buscamos mensajes donde el receptor sea uno de los dos usuarios.
     $stmt = $pdo->prepare("
-        SELECT id, de_usuario_id, payload_cifrado, creado_en 
+        SELECT id, de_usuario_id, para_usuario_id, payload_cifrado, creado_en 
         FROM mensajes 
-        WHERE (de_usuario_id = ? AND para_usuario_id = ?) 
-           OR (de_usuario_id = ? AND para_usuario_id = ?) 
+        WHERE para_usuario_id = ? OR para_usuario_id = ?
         ORDER BY creado_en ASC
     ");
-    $stmt->execute([$mi_id, $contacto_id, $contacto_id, $mi_id]);
-    $mensajes = $stmt->fetchAll();
+    $stmt->execute([ofuscar_id($mi_id), ofuscar_id($contacto_id)]);
+    $todos_mensajes = $stmt->fetchAll();
+    
+    $mensajes = [];
+    // Desofuscar y filtrar en PHP para dejar solo los mensajes correspondientes a esta conversación
+    foreach ($todos_mensajes as $msg) {
+        $de_dec = desofuscar_id_dinamico($msg['de_usuario_id']);
+        $para_dec = desofuscar_id($msg['para_usuario_id']);
+        
+        if (($de_dec === $mi_id && $para_dec === $contacto_id) || ($de_dec === $contacto_id && $para_dec === $mi_id)) {
+            $msg['de_usuario_id'] = $de_dec;
+            unset($msg['para_usuario_id']); // Mantener idéntico el esquema de salida esperado por la UI
+            $mensajes[] = $msg;
+        }
+    }
     
     // Marcar como entregados los que me enviaron a mí en este historial
     if (count($mensajes) > 0) {

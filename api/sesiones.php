@@ -1,5 +1,6 @@
 <?php
 require 'db.php';
+require 'auth.php';
 header('Content-Type: application/json');
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -8,11 +9,15 @@ $data = json_decode(file_get_contents('php://input'), true);
 if ($method === 'POST') {
     $action = $data['action'] ?? null;
     $usuario_id = $data['usuario_id'] ?? null;
+    $token_sesion = $data['token_sesion'] ?? null;
 
     if (!$usuario_id) {
         echo json_encode(['error' => 'Falta usuario_id']);
         exit;
     }
+
+    validar_sesion($usuario_id, $token_sesion, $pdo);
+
 
     if ($action === 'list') {
         try {

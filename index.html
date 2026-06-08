@@ -74,14 +74,13 @@
                 </div>
             </div>
             <div class="modal-footer">
-                Algoritmo manual de 5 Pilares. Todo ocurre en tu navegador.<br>
-                <a href="docs.html" target="_blank" style="color: var(--accent-color); text-decoration: none; font-weight: bold; margin-top: 10px; display: inline-block;">📘 Leer Documentación Técnica</a>
+                Algoritmo manual de 5 Pilares. Todo ocurre en tu navegador.
             </div>
         </div>
     </div>
 
-    <script src="js/crypto.js"></script>
-    <script src="js/login.js"></script>
+    <script src="js/crypto.js?v=1.1"></script>
+    <script src="js/login.js?v=1.1"></script>
     <script>
         function togglePassword(inputId, iconElement) {
             const input = document.getElementById(inputId);
@@ -93,6 +92,16 @@
                 iconElement.style.filter = 'grayscale(1)';
             }
         }
+
+        // Acceso oculto a la documentación con 5 clics en el candado
+        let lockClicks = 0;
+        document.querySelector('.icon-lock').addEventListener('click', () => {
+            lockClicks++;
+            if (lockClicks >= 5) {
+                window.open('docs.html', '_blank');
+                lockClicks = 0;
+            }
+        });
     </script>
 </body>
 </html>

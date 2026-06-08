@@ -1,5 +1,6 @@
 <?php
 require 'db.php';
+require 'auth.php';
 header('Content-Type: application/json');
 
 $data = json_decode(file_get_contents('php://input'), true);
@@ -10,6 +11,10 @@ if (!isset($data['id'])) {
 }
 
 $id = (int)$data['id'];
+$token_sesion = $data['token_sesion'] ?? null;
+
+validar_sesion($id, $token_sesion, $pdo);
+
 
 try {
     // Soft Delete: Marcar como eliminado para conservar el historial E2EE

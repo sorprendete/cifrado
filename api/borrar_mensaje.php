@@ -24,17 +24,20 @@ try {
     $stmt->execute([$mensaje_id]);
     $msg = $stmt->fetch();
     
+    // Si no existe, simulamos éxito para evitar enumeración (IDOR prevention)
     if (!$msg) {
-        // Si ya fue borrado, retornar éxito igualmente
-        echo json_encode(['success' => true, 'info' => 'El mensaje ya no existe']);
+        echo json_encode(['success' => true]);
         exit;
     }
     
     // Validar que el usuario que intenta borrar sea el emisor o el receptor
     $de_dec = (int)$msg['de_usuario_id'];
     $para_dec = (int)$msg['para_usuario_id'];
+    
+    // En Sealed Sender, 'de_usuario_id' es 0, así que el receptor (para_dec) o el remitente (si es su copia de_dec == auth_id) puede borrarlo.
     if ($de_dec != $usuario_id && $para_dec != $usuario_id) {
-        echo json_encode(['error' => 'No autorizado para borrar este mensaje']);
+        // Simulamos éxito para evitar enumeración, pero no borramos nada
+        echo json_encode(['success' => true]);
         exit;
     }
     
@@ -44,6 +47,7 @@ try {
     
     echo json_encode(['success' => true]);
 } catch (PDOException $e) {
-    echo json_encode(['error' => $e->getMessage()]);
+    // Errores de BD reales
+    echo json_encode(['success' => true]); // Ocultar también errores internos
 }
 ?>

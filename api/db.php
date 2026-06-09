@@ -78,7 +78,6 @@ try {
                     payload_cifrado TEXT NOT NULL,
                     entregado TINYINT(1) DEFAULT 0,
                     creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (de_usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
                     FOREIGN KEY (para_usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
                 )
             ");

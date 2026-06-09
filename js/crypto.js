@@ -480,8 +480,8 @@ window.mostrarConfirmacionSegura = function(config) {
         popup: 'crypto-swal-popup',
         title: 'crypto-swal-title',
         htmlContainer: 'crypto-swal-content',
-        confirmButton: 'btn-primary crypto-swal-confirm',
-        cancelButton: 'btn-secondary crypto-swal-cancel',
+        confirmButton: 'btn btn-primary crypto-swal-confirm',
+        cancelButton: 'btn btn-outline crypto-swal-cancel',
         actions: 'crypto-swal-actions',
         icon: 'crypto-swal-icon'
     };
@@ -537,4 +537,60 @@ window.mostrarConfirmacionSegura = function(config) {
             return true;
         }
     });
+};
+
+// --- KEY WRAPPING PARA MITIGAR SESSION HIJACKING ---
+window.CryptoUtils = {
+    async wrapPrivateKey(privKeyStr, pin) {
+        const enc = new TextEncoder();
+        const pinMaterial = await crypto.subtle.importKey(
+            "raw", enc.encode(pin), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"]
+        );
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const key = await crypto.subtle.deriveKey(
+            { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+            pinMaterial,
+            { name: "AES-GCM", length: 256 },
+            false,
+            ["encrypt"]
+        );
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const encrypted = await crypto.subtle.encrypt(
+            { name: "AES-GCM", iv: iv },
+            key,
+            enc.encode(privKeyStr)
+        );
+        return {
+            salt: btoa(String.fromCharCode(...salt)),
+            iv: btoa(String.fromCharCode(...iv)),
+            data: btoa(String.fromCharCode(...new Uint8Array(encrypted)))
+        };
+    },
+    async unwrapPrivateKey(wrappedObj, pin) {
+        try {
+            const enc = new TextEncoder();
+            const pinMaterial = await crypto.subtle.importKey(
+                "raw", enc.encode(pin), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"]
+            );
+            const salt = Uint8Array.from(atob(wrappedObj.salt), c => c.charCodeAt(0));
+            const iv = Uint8Array.from(atob(wrappedObj.iv), c => c.charCodeAt(0));
+            const data = Uint8Array.from(atob(wrappedObj.data), c => c.charCodeAt(0));
+            
+            const key = await crypto.subtle.deriveKey(
+                { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+                pinMaterial,
+                { name: "AES-GCM", length: 256 },
+                false,
+                ["decrypt"]
+            );
+            const decrypted = await crypto.subtle.decrypt(
+                { name: "AES-GCM", iv: iv },
+                key,
+                data
+            );
+            return new TextDecoder().decode(decrypted);
+        } catch(e) {
+            return null; // Fallo al desencriptar (PIN incorrecto)
+        }
+    }
 };

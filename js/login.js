@@ -117,20 +117,18 @@ btnRegister.addEventListener('click', async () => {
     const nombre = regUsername.value.trim().toLowerCase();
     const password = regPassword.value.trim();
     
-    if (!alias || !nombre || !password) return showToast('Completa todos los campos.', 'warning');
+    const pin = document.getElementById('reg-pin').value;
+
+    if (!nombre || !alias || !password || !pin || pin.length < 4) return showToast('Completa todos los campos, incluyendo el PIN (4 dígitos).', 'warning');
 
     btnRegister.disabled = true;
-    btnRegister.innerText = "Procesando...";
-
-    const llavesIdentidad = MiCifrado.generarIdentidadAleatoria();
-    const llaveCandado = MiCifrado.derivarLlaveCandado(nombre, password);
-    
-    const bovedaCifrada = MiCifrado.empaquetarBoveda(llavesIdentidad.privada, llaveCandado);
-    
-    currentUser.llaves = llavesIdentidad;
-    currentUser.nombre = nombre;
+    btnRegister.innerText = "Generando Bóveda...";
     
     try {
+        const llavesIdentidad = MiCifrado.generarIdentidadAleatoria();
+        const llaveCandado = MiCifrado.derivarLlaveCandado(nombre, password);
+        const bovedaCifrada = MiCifrado.empaquetarBoveda(llavesIdentidad.privada, llaveCandado);
+
         const response = await fetch('api/registro.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -147,13 +145,19 @@ btnRegister.addEventListener('click', async () => {
             currentUser.id = result.id;
             currentUser.alias_publico = alias;
             currentUser.token_sesion = result.token_sesion;
+            currentUser.llaves = llavesIdentidad;
             
-            // Protección: Guardar llave privada solo en memoria de sesión (RAM)
-            sessionStorage.setItem('e2ee_priv', llavesIdentidad.privada);
-            const forStorage = { ...currentUser };
-            delete forStorage.llaves.privada;
+            // KEY WRAPPING: Proteger llave privada con el PIN antes de guardarla en LocalStorage
+            const wrappedPrivKey = await CryptoUtils.wrapPrivateKey(currentUser.llaves.privada, pin);
+            
+            const forStorage = { ...currentUser, llaves: { ...currentUser.llaves } };
+            forStorage.llaves.privada = wrappedPrivKey;
             
             localStorage.setItem('e2ee_identity', JSON.stringify(forStorage));
+            
+            // UX: Guardar la llave plana en sessionStorage temporalmente para no pedir el PIN justo después del registro
+            sessionStorage.setItem('e2ee_priv_temp', currentUser.llaves.privada);
+            
             window.location.href = 'chat.html';
         } else {
             showToast('Error: ' + result.error, 'error');
@@ -241,12 +245,25 @@ btnLogin.addEventListener('click', async () => {
             currentUser.llaves = llavesDesempaquetadas;
             currentUser.token_sesion = loginResult.token_sesion;
             
-            // Protección: Guardar llave privada solo en memoria de sesión (RAM)
-            sessionStorage.setItem('e2ee_priv', llavesDesempaquetadas.privada);
-            const forStorage = { ...currentUser };
-            delete forStorage.llaves.privada;
+            const pin = document.getElementById('login-pin').value;
+            if (!pin || pin.length < 4) {
+                showToast('Ingresa un PIN válido para cifrar tu bóveda local.', 'warning');
+                btnLogin.disabled = false;
+                btnLogin.innerText = "Ingresar a Bóveda";
+                return;
+            }
+
+            // KEY WRAPPING: Proteger llave privada con el PIN antes de guardarla
+            const wrappedPrivKey = await CryptoUtils.wrapPrivateKey(currentUser.llaves.privada, pin);
+            
+            const forStorage = { ...currentUser, llaves: { ...currentUser.llaves } };
+            forStorage.llaves.privada = wrappedPrivKey;
             
             localStorage.setItem('e2ee_identity', JSON.stringify(forStorage));
+            
+            // UX: Guardar la llave plana en sessionStorage temporalmente
+            sessionStorage.setItem('e2ee_priv_temp', currentUser.llaves.privada);
+            
             window.location.href = 'chat.html';
         } else {
             showToast('Acceso Denegado: ' + loginResult.error, 'error');

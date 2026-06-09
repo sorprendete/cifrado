@@ -1,5 +1,6 @@
 <?php
 require 'db.php';
+require 'auth.php';
 header('Content-Type: application/json');
 
 $usuario_id = $_GET['usuario_id'] ?? null;

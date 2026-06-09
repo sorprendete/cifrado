@@ -17,8 +17,10 @@ let currentUser = null;
 let currentContact = null;
 let pollingInterval = null;
 let userPollingInterval = null;
+let lastMessageId = 0;
+let unreadCounts = {}; // { userId: count }
 let messagesCache = new Set();
-let unreadCounts = {}; 
+let usersList = []; // Added to fix ReferenceError in polling
 
 function escapeHTML(str) {
     if (!str) return '';
@@ -40,19 +42,61 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
     }
     const identity = JSON.parse(savedIdentity);
-    const privada = sessionStorage.getItem('e2ee_priv');
+    const privada = identity.llaves?.privada;
+    const tempPriv = sessionStorage.getItem('e2ee_priv_temp');
     
-    if (!privada) {
-        // La memoria RAM (sessionStorage) se borró, requiere desbloquear bóveda de nuevo
+    if (!privada && !tempPriv) {
         localStorage.removeItem('e2ee_identity');
         window.location.href = 'index.html';
         return;
     }
-    
-    identity.llaves = identity.llaves || {};
-    identity.llaves.privada = privada;
-    currentUser = identity;
 
+    if (tempPriv && tempPriv !== "[object Object]") {
+        // UX: Venimos del login/registro. No pedimos PIN ahora.
+        identity.llaves.privada = tempPriv;
+        iniciarApp(identity);
+    } else if (typeof privada === 'object' && privada.salt) {
+        // La bóveda está bloqueada con PIN
+        const modal = document.getElementById('pinUnlockModal');
+        modal.classList.remove('hidden');
+        
+        const btnUnlock = document.getElementById('btn-unlock-pin');
+        const inputPin = document.getElementById('unlock-pin');
+        
+        btnUnlock.addEventListener('click', async () => {
+            const pin = inputPin.value;
+            if (pin.length < 4) return;
+            
+            btnUnlock.disabled = true;
+            btnUnlock.innerText = "Descifrando...";
+            
+            const rawPriv = await CryptoUtils.unwrapPrivateKey(privada, pin);
+            if (!rawPriv) {
+                alert("PIN Incorrecto. La bóveda arrojó basura criptográfica.");
+                btnUnlock.disabled = false;
+                btnUnlock.innerText = "DESBLOQUEAR";
+                inputPin.value = '';
+                return;
+            }
+            
+            // Éxito
+            identity.llaves.privada = rawPriv;
+            modal.classList.add('hidden');
+            iniciarApp(identity);
+        });
+        
+        inputPin.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') btnUnlock.click();
+        });
+        
+    } else {
+        // Fallback por si la sesión antigua no tenía PIN (texto plano)
+        iniciarApp(identity);
+    }
+});
+
+function iniciarApp(identity) {
+    currentUser = identity;
     document.getElementById('my-alias').innerText = currentUser.alias_publico || currentUser.nombre;
     document.getElementById('my-public-key').innerText = `ID: ${currentUser.llaves.publica.substring(0,16)}...`;
     
@@ -78,7 +122,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     cargarUsuarios();
     iniciarPolling();
-});
+}
 
 // --- UI ELEMENTS ---
 const userList = document.getElementById('user-list');
@@ -101,26 +145,39 @@ function cargarUsuarios() {
         .then(result => {
             if (result.success) {
                 userList.innerHTML = '';
+                usersList = result.usuarios;
                 result.usuarios.forEach(user => {
                     if (user.id == currentUser.id) return;
                     
                     const div = document.createElement('div');
-                    div.className = 'user-item' + (currentContact && currentContact.id == user.id ? ' active' : '');
+                    div.className = 'chat-list-item user-item' + (currentContact && currentContact.id == user.id ? ' active' : '');
                     
                     const unreadCount = unreadCounts[user.id] || 0;
-                    const badge = unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : '';
+                    const badge = unreadCount > 0 ? `<div class="unread-badge" style="background:var(--danger); color:white; border-radius:50%; padding:2px 6px; font-size:0.7rem;">${unreadCount}</div>` : '';
+                    const inicial = user.alias_publico ? user.alias_publico.charAt(0).toUpperCase() : '?';
+                    const isOnline = user.online ? '<span class="online-dot"></span>' : '';
                     
                     div.innerHTML = `
-                        <strong>${escapeHTML(user.alias_publico)}</strong><br>
-                        <small style="color:var(--text-secondary)">ID: ${escapeHTML(user.llave_publica.substring(0,16))}...</small>
-                        ${badge}
+                        <div class="contact-avatar">
+                            ${inicial}
+                            ${isOnline}
+                        </div>
+                        <div class="contact-info">
+                            <div class="contact-name" style="display:flex; justify-content:space-between; align-items:center;">
+                                ${escapeHTML(user.alias_publico)}
+                                ${badge}
+                            </div>
+                            <div class="contact-last-msg">
+                                <i class="fa-solid fa-lock"></i> Chat E2EE
+                            </div>
+                        </div>
                     `;
                     div.addEventListener('click', () => {
                         unreadCounts[user.id] = 0;
                         abrirChat(user);
                         if(window.innerWidth <= 768) {
                             document.querySelector('.sidebar').classList.add('mobile-hidden');
-                            document.querySelector('.chat-area').classList.add('mobile-visible');
+                            document.querySelector('.main-chat').classList.add('mobile-visible');
                         }
                     });
                     userList.appendChild(div);
@@ -157,13 +214,31 @@ function abrirChat(user) {
         messageInput.placeholder = "El usuario eliminó su cuenta.";
     } else {
         chatHeader.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <button id="btn-back-mobile" class="btn-secondary" style="padding: 5px 10px; border: none; border-radius: 8px; background: transparent;"><svg class="ui-icon-svg" style="width:20px;height:20px;" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
-                <div>
-                    <h3>${escapeHTML(user.alias_publico)}</h3>
-                    <span class="status-badge status-secure"><svg class="ui-icon-svg" style="width:14px;height:14px;" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Conexión E2EE Establecida</span>
-                </div>
+            <button class="back-btn" id="btn-back-mobile" title="Volver a lista">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div class="avatar">
+                <span>${escapeHTML(user.alias_publico.charAt(0).toUpperCase())}</span>
             </div>
+            <div class="chat-contact-info">
+                <div class="chat-contact-name">
+                    <span id="current-contact-name">${escapeHTML(user.alias_publico)}</span>
+                    <span class="encryption-indicator" style="display:flex;">
+                        <i class="fa-solid fa-lock"></i> E2EE Seguro
+                    </span>
+                </div>
+                <div class="chat-contact-status">Conectado</div>
+            </div>
+              <div class="chat-actions">
+                  <div class="ephemeral-control" title="Autodestrucción de mensajes">
+                      <select id="ephemeral-select" class="neon-select">
+                          <option value="0">∞</option>
+                          <option value="30">30s</option>
+                          <option value="60">1m</option>
+                          <option value="300">5m</option>
+                      </select>
+                  </div>
+              </div>
         `;
         messageInput.disabled = false;
         btnSend.disabled = false;
@@ -173,10 +248,14 @@ function abrirChat(user) {
         messageInput.placeholder = "Escribe un mensaje seguro...";
     }
 
-    document.getElementById('btn-back-mobile').addEventListener('click', () => {
-        document.querySelector('.sidebar').classList.remove('mobile-hidden');
-        document.querySelector('.chat-area').classList.remove('mobile-visible');
-    });
+    // Re-bindear eventos del nuevo header dinámico
+    const btnBackMobile = document.getElementById('btn-back-mobile');
+    if (btnBackMobile) {
+        btnBackMobile.addEventListener('click', () => {
+            document.querySelector('.sidebar').classList.remove('mobile-hidden');
+            document.querySelector('.main-chat').classList.remove('mobile-visible');
+        });
+    }
 
     chatMessages.innerHTML = '';
     if (user.eliminado != 1) messageInput.focus();
@@ -200,15 +279,38 @@ async function cargarHistorial(isPolling = false) {
             
             result.mensajes.forEach(msg => {
                 if (messagesCache.has(msg.id)) return;
+                
+                let realSenderId = msg.de_usuario_id;
+                let decResult = null;
+                let payloadCipher = msg.payload_cifrado;
+                let tipo = "them";
+
+                if (realSenderId == currentUser.id) {
+                    // Es un mensaje saliente (mi copia propia)
+                    tipo = "me";
+                    // En el nuevo formato "Sealed Sender dual", el payload viene como "contactId::cifrado"
+                    const delimiterIndex = payloadCipher.indexOf('::');
+                    if (delimiterIndex > -1) {
+                        const targetId = parseInt(payloadCipher.substring(0, delimiterIndex));
+                        if (targetId != currentContact.id) return; // No es para este chat
+                        payloadCipher = payloadCipher.substring(delimiterIndex + 2);
+                    }
+                    decResult = MiCifrado.descifrarFinal(payloadCipher, currentContact.rootKey, () => {});
+                } else if (realSenderId == 0) {
+                    // Mensaje entrante anónimo
+                    decResult = MiCifrado.descifrarFinal(payloadCipher, currentContact.rootKey, () => {});
+                    if (!decResult.valido) return; // Si no es válido con la llave de este contacto, es porque no lo envió él
+                } else if (realSenderId == currentContact.id) {
+                    // Mensaje entrante legacy
+                    decResult = MiCifrado.descifrarFinal(payloadCipher, currentContact.rootKey, () => {});
+                } else {
+                    return; // No pertenece a esta conversación (legacy)
+                }
+                
                 messagesCache.add(msg.id);
-                const isMe = msg.de_usuario_id == currentUser.id;
-                const tipo = isMe ? "me" : "them";
                 
-                // Descifrar silenciosamente para historial
-                const resultado = MiCifrado.descifrarFinal(msg.payload_cifrado, currentContact.rootKey, () => {});
-                
-                if (resultado.valido) {
-                    procesarMensajeDescifrado(msg.id, resultado.texto, msg.creado_en, tipo);
+                if (decResult && decResult.valido) {
+                    procesarMensajeDescifrado(msg.id, decResult.texto, msg.creado_en, tipo);
                 } else {
                     procesarMensajeDescifrado(msg.id, `[Bloqueado: Paquete corrupto]`, msg.creado_en, tipo);
                 }
@@ -266,7 +368,8 @@ function mostrarMensajeUI(text, timestamp, type, msgId, isEphemeral = false, eph
     if (document.querySelector(`.message[data-id="${msgId}"]`)) return;
 
     const div = document.createElement('div');
-    div.className = `message ${type}`;
+    const cssClass = type === 'me' ? 'sent' : 'received';
+    div.className = `message ${cssClass}`;
     if (msgId) div.setAttribute('data-id', msgId);
     
     const time = new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -274,9 +377,9 @@ function mostrarMensajeUI(text, timestamp, type, msgId, isEphemeral = false, eph
     let actionsHtml = '';
     if (type === 'me') {
         actionsHtml = `
-            <div class="message-actions">
-                <button class="action-btn btn-edit" title="Editar"><svg class="ui-icon-svg" style="width:16px;height:16px;" viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>
-                <button class="action-btn btn-delete" title="Borrar"><svg class="ui-icon-svg" style="width:16px;height:16px;" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+            <div class="message-actions" style="position: absolute; right: 100%; top: 50%; transform: translateY(-50%); display: none; gap: 4px; padding-right: 8px;">
+                <button class="icon-btn btn-edit" title="Editar" style="width: 24px; height: 24px; font-size: 0.7rem;"><i class="fa-solid fa-pen"></i></button>
+                <button class="icon-btn btn-delete" title="Borrar" style="width: 24px; height: 24px; font-size: 0.7rem; color: var(--danger);"><i class="fa-solid fa-trash"></i></button>
             </div>
         `;
     }
@@ -313,18 +416,15 @@ function mostrarMensajeUI(text, timestamp, type, msgId, isEphemeral = false, eph
     }
 
     let avatarHtml = '';
-    if (type === 'them' && currentContact) {
-        let inicial = (currentContact.alias_publico || currentContact.nombre).charAt(0).toUpperCase();
-        avatarHtml = `<div class="avatar-circle">${inicial}</div>`;
-        div.classList.add('has-avatar');
-    }
-
+    // NeonVault no requiere avatar dentro de la burbuja, pero mantendremos acciones.
+    
     div.innerHTML = `
-        ${avatarHtml}
-        <div class="message-content">
-            ${actionsHtml}
-            <div class="text"></div>
-            <div class="time">${time}${timerHtml}</div>
+        <span class="msg-encrypted-tag"><i class="fa-solid fa-lock"></i> E2E</span>
+        ${actionsHtml}
+        <div class="text"></div>
+        <div class="msg-time">
+            ${time}${timerHtml}
+            ${type === 'me' ? '<i class="fa-solid fa-check-double"></i>' : ''}
         </div>
     `;
     
@@ -380,9 +480,10 @@ function mostrarMensajeUI(text, timestamp, type, msgId, isEphemeral = false, eph
                 document.querySelectorAll('.message').forEach(m => m.classList.remove('editing-mode'));
                 div.classList.add('editing-mode');
                 messageInput.value = div.querySelector('.text').innerText.replace('(editado)', '').trim();
+                messageInput.dispatchEvent(new Event('input'));
                 messageInput.focus();
                 editMessageId = msgId;
-                btnSend.innerHTML = 'GUARDAR';
+                btnSend.innerHTML = '<i class="fa-solid fa-check"></i>';
             });
         }
         
@@ -418,14 +519,18 @@ async function enviarComandoControl(comando, targetMsgId) {
     const onLog = (etiqueta, datos) => agregarPasoVisualizador(vizBlock, etiqueta, datos);
     const payloadCifrado = MiCifrado.cifrarFinal(comando, currentContact.rootKey, onLog);
     
+    const payloadPropio = currentContact.id + "::" + payloadCifrado; // Para historial propio
+    
     try {
         await fetch('api/enviar.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                de_usuario_id: currentUser.id,
+                de_usuario_id: 0,
+                auth_usuario_id: currentUser.id,
                 para_usuario_id: currentContact.id,
                 payload_cifrado: payloadCifrado,
+                payload_propio: payloadPropio,
                 token_sesion: currentUser.token_sesion
             })
         });
@@ -471,7 +576,8 @@ async function enviarMensaje() {
     }
 
     messageInput.value = '';
-    btnSend.innerHTML = 'ENVIAR';
+    messageInput.style.height = '44px';
+    btnSend.innerHTML = '<i class="fa-solid fa-paper-plane"></i>';
     document.querySelectorAll('.message').forEach(m => m.classList.remove('editing-mode'));
     
     let tempMsgId = 'temp_' + Date.now();
@@ -495,15 +601,18 @@ async function enviarMensaje() {
     const onLog = (etiqueta, datos) => agregarPasoVisualizador(vizBlock, etiqueta, datos);
 
     const payloadCifrado = MiCifrado.cifrarFinal(textoFinal, currentContact.rootKey, onLog);
+    const payloadPropio = currentContact.id + "::" + payloadCifrado; // Para historial propio
 
     try {
         const response = await fetch('api/enviar.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                de_usuario_id: currentUser.id,
+                de_usuario_id: 0, // Remitente sellado (el servidor no sabe quién lo envió)
+                auth_usuario_id: currentUser.id, // Solo para validar sesión
                 para_usuario_id: currentContact.id,
                 payload_cifrado: payloadCifrado,
+                payload_propio: payloadPropio, // Copia para el historial personal
                 token_sesion: currentUser.token_sesion
             })
         });
@@ -519,9 +628,10 @@ async function enviarMensaje() {
                     document.querySelectorAll('.message').forEach(m => m.classList.remove('editing-mode'));
                     div.classList.add('editing-mode');
                     messageInput.value = div.querySelector('.text').innerText.replace('(editado)', '').trim();
+                    messageInput.dispatchEvent(new Event('input'));
                     messageInput.focus();
                     editMessageId = result.id;
-                    btnSend.innerHTML = 'GUARDAR';
+                    btnSend.innerHTML = '<i class="fa-solid fa-check"></i>';
                 });
                 if (btnDel) btnDel.addEventListener('click', () => {
                     mostrarConfirmacionSegura({
@@ -566,23 +676,47 @@ async function procesarBuzon() {
             let actualizados = false;
             result.mensajes.forEach(msg => {
                 if (messagesCache.has(msg.id)) return;
+                
+                let realSenderId = msg.de_usuario_id;
+                let decResult = null;
+                
+                if (realSenderId == 0) {
+                    // Sealed Sender: Probar con todos los contactos conocidos
+                    for (const u of usersList) {
+                        if (u.id == currentUser.id) continue;
+                        const potentialKey = MiCifrado.derivarLlaveRaiz(u.llave_publica, currentUser.llaves.privada);
+                        const r = MiCifrado.descifrarFinal(msg.payload_cifrado, potentialKey, () => {});
+                        if (r.valido) {
+                            realSenderId = u.id;
+                            decResult = r;
+                            break;
+                        }
+                    }
+                } else if (realSenderId == currentUser.id) {
+                    // Es nuestra copia propia, el ID del contacto está incrustado al principio
+                    // payload = "to_id::cifrado" (esto no viene del servidor, lo manejamos diferente)
+                    // En Sealed Sender, para_usuario_id == currentUser.id, y de_usuario_id == currentUser.id
+                    // No procesamos nuestras copias propias como mensajes entrantes de notificación.
+                    messagesCache.add(msg.id);
+                    return; 
+                } else {
+                    // Legacy message
+                    const u = usersList.find(x => x.id == realSenderId);
+                    if (u) {
+                        const potentialKey = MiCifrado.derivarLlaveRaiz(u.llave_publica, currentUser.llaves.privada);
+                        decResult = MiCifrado.descifrarFinal(msg.payload_cifrado, potentialKey, () => {});
+                    }
+                }
+                
+                if (!decResult || !decResult.valido) return; // No es para nosotros o no pudimos descifrar
+                
                 messagesCache.add(msg.id);
                 
-                if (currentContact && msg.de_usuario_id == currentContact.id) {
-                    const vizBlock = iniciarBloqueVisualizador("Descifrando (Recepción)", "them");
-                    const onLog = (etiqueta, datos) => agregarPasoVisualizador(vizBlock, etiqueta, datos);
-
-                    const resultado = MiCifrado.descifrarFinal(msg.payload_cifrado, currentContact.rootKey, onLog);
-                    
-                    if (resultado.valido) {
-                        procesarMensajeDescifrado(msg.id, resultado.texto, resultado.timestamp, 'them');
-                    } else {
-                        procesarMensajeDescifrado(msg.id, `[Bloqueado: ${resultado.error}]`, new Date().toISOString(), 'them');
-                        console.error("Ataque interceptado:", resultado.error);
-                    }
+                if (currentContact && realSenderId == currentContact.id) {
+                    procesarMensajeDescifrado(msg.id, decResult.texto, decResult.timestamp || msg.creado_en, 'them');
                 } else {
-                    if (!unreadCounts[msg.de_usuario_id]) unreadCounts[msg.de_usuario_id] = 0;
-                    unreadCounts[msg.de_usuario_id]++;
+                    if (!unreadCounts[realSenderId]) unreadCounts[realSenderId] = 0;
+                    unreadCounts[realSenderId]++;
                     actualizados = true;
                 }
             });
@@ -602,9 +736,23 @@ function iniciarPolling() {
 
 // Listeners
 if(btnSend) btnSend.addEventListener('click', () => enviarMensaje());
-if(messageInput) messageInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); enviarMensaje(); }
-});
+if(messageInput) {
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { 
+            e.preventDefault(); 
+            enviarMensaje(); 
+        }
+    });
+    messageInput.addEventListener('input', function() {
+        this.style.height = '44px';
+        this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        if (this.scrollHeight > 100) {
+            this.style.overflowY = 'auto';
+        } else {
+            this.style.overflowY = 'hidden';
+        }
+    });
+}
 
 // --- GESTIÓN DE PERFIL ---
 const btnProfile = document.getElementById('btn-profile');
@@ -644,18 +792,24 @@ async function cargarSesiones() {
             result.sesiones.forEach(s => {
                 const isCurrent = s.token_sesion === currentUser.token_sesion;
                 const div = document.createElement('div');
-                div.style = "background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;";
+                div.style = "background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05); gap: 10px;";
                 
+                // Formatear dispositivo para que no sea tan largo (extraer SO o Navegador si es posible, o simplemente recortar)
+                let deviceStr = s.dispositivo;
+                if(deviceStr.length > 40) deviceStr = deviceStr.substring(0, 40) + '...';
+
                 const htmlInfo = `
-                    <div>
-                        <strong style="color: ${isCurrent ? 'var(--accent-color)' : '#fff'};">${s.dispositivo} ${isCurrent ? '(Actual)' : ''}</strong><br>
-                        <small style="color: var(--text-secondary);">IP: ${s.ip} | Acceso: ${new Date(s.ultimo_acceso).toLocaleString()}</small>
+                    <div style="flex: 1; min-width: 0;">
+                        <strong style="color: ${isCurrent ? 'var(--neon-blue)' : '#fff'}; font-size: 0.85rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${s.dispositivo}">
+                            <i class="fa-solid ${isCurrent ? 'fa-laptop-code' : 'fa-laptop'}"></i> ${deviceStr} ${isCurrent ? '<span style="font-size:0.7rem; background:rgba(0,200,255,0.1); padding:2px 6px; border-radius:10px; margin-left:5px;">ACTUAL</span>' : ''}
+                        </strong>
+                        <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">IP: ${s.ip} &bull; Acceso: ${new Date(s.ultimo_acceso).toLocaleString()}</small>
                     </div>
                 `;
                 
                 let htmlAction = '';
                 if (!isCurrent) {
-                    htmlAction = `<button class="btn-revoke-session" data-id="${s.id}" style="background: var(--danger-color); color: #fff; border: none; padding: 5px 10px; border-radius: 6px; cursor: pointer;">Cerrar</button>`;
+                    htmlAction = `<button class="btn-revoke-session" data-id="${s.id}" style="background: rgba(255,68,119,0.1); color: var(--danger); border: 1px solid rgba(255,68,119,0.2); padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: all 0.2s;"><i class="fa-solid fa-xmark"></i></button>`;
                 }
                 
                 div.innerHTML = htmlInfo + htmlAction;
@@ -785,7 +939,7 @@ if (btnDeleteAccount) {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        usuario_id: currentUser.id,
+                        id: currentUser.id,
                         token_sesion: currentUser.token_sesion
                     })
                 });
@@ -826,6 +980,7 @@ if (emojiPicker) {
         btn.style = "background: none; border: none; font-size: 1.5rem; cursor: pointer;";
         btn.onclick = () => {
             messageInput.value += emoji;
+            messageInput.dispatchEvent(new Event('input'));
             messageInput.focus();
         };
         emojiPicker.appendChild(btn);
@@ -864,12 +1019,42 @@ if(fileInput) fileInput.addEventListener('change', async (e) => {
 
 // Manejo de Audio
 let mediaRecorder; let audioChunks = [];
+let recordingInterval; let recordingSeconds = 0;
+
+function updateRecordingUI(isRecording) {
+    const recordingUi = document.getElementById('recording-ui');
+    const recordingTimeEl = document.getElementById('recording-time');
+    
+    if (isRecording) {
+        if(btnEmoji) btnEmoji.style.display = 'none';
+        if(btnAttach) btnAttach.style.display = 'none';
+        if(messageInput) messageInput.style.display = 'none';
+        if(recordingUi) recordingUi.classList.remove('hidden');
+        
+        recordingSeconds = 0;
+        if(recordingTimeEl) recordingTimeEl.innerText = "00:00";
+        recordingInterval = setInterval(() => {
+            recordingSeconds++;
+            const mins = String(Math.floor(recordingSeconds / 60)).padStart(2, '0');
+            const secs = String(recordingSeconds % 60).padStart(2, '0');
+            if(recordingTimeEl) recordingTimeEl.innerText = `${mins}:${secs}`;
+        }, 1000);
+    } else {
+        clearInterval(recordingInterval);
+        if(btnEmoji) btnEmoji.style.display = '';
+        if(btnAttach) btnAttach.style.display = '';
+        if(messageInput) messageInput.style.display = '';
+        if(recordingUi) recordingUi.classList.add('hidden');
+    }
+}
+
 if(btnMic) {
-  btnMic.addEventListener('mousedown', async () => {
+  const startRecording = async (e) => {
+    if(e) e.preventDefault();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.ondataavailable = ev => audioChunks.push(ev.data);
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
         const reader = new FileReader();
@@ -883,17 +1068,37 @@ if(btnMic) {
       };
       mediaRecorder.start();
       btnMic.classList.add('recording');
+      updateRecordingUI(true);
     } catch(err) { showToast('Permiso de micrófono denegado.', 'error'); }
-  });
-  const stopRecording = () => {
+  };
+
+  const stopRecording = (e) => {
+    if(e) e.preventDefault();
     if(mediaRecorder && mediaRecorder.state === 'recording') {
       mediaRecorder.stop();
       btnMic.classList.remove('recording');
+      updateRecordingUI(false);
       mediaRecorder.stream.getTracks().forEach(t => t.stop());
     }
   };
-  btnMic.addEventListener('mouseup', stopRecording);
-  btnMic.addEventListener('mouseleave', stopRecording);
+
+  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+
+  if (isTouchDevice) {
+      // Móvil: Mantener presionado
+      btnMic.addEventListener('touchstart', startRecording, {passive: false});
+      btnMic.addEventListener('touchend', stopRecording, {passive: false});
+      btnMic.addEventListener('touchcancel', stopRecording, {passive: false});
+  } else {
+      // Escritorio: Un clic para empezar, otro para parar
+      btnMic.addEventListener('click', (e) => {
+          if (mediaRecorder && mediaRecorder.state === 'recording') {
+              stopRecording(e);
+          } else {
+              startRecording(e);
+          }
+      });
+  }
 }
 
 if(btnCancelMedia) btnCancelMedia.addEventListener('click', () => {

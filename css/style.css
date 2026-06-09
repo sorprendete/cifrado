@@ -1,5 +1,5 @@
 
-/* --- Estilos extraídos de index.html --- */
+/* --- Estilos extraÃ­dos de index.html --- */
 
         body {
             display: flex;
@@ -9,7 +9,7 @@
             background: #04070a;
         }
     
-/* --- Estilos extraídos de docs.html --- */
+/* --- Estilos extraÃ­dos de docs.html --- */
 
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Fira+Code:wght@400;600&display=swap');
 
@@ -253,3 +253,257 @@
             animation-delay: 1s;
         }
     
+/* =========================================
+   SISTEMA DE NOTIFICACIONES FLOTANTES (TOASTS)
+   ========================================= */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.toast-notification {
+    display: flex;
+    align-items: center;
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 12px 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    min-width: 300px;
+    max-width: 400px;
+    pointer-events: auto;
+    animation: toastSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-left: 4px solid transparent;
+}
+
+.toast-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-text {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.toast-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    margin-left: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.toast-close:hover {
+    color: var(--text-primary);
+}
+
+/* Tipos de Toast */
+.toast-success {
+    border-left-color: #4caf50;
+}
+.toast-success .toast-icon {
+    color: #4caf50;
+}
+
+.toast-error {
+    border-left-color: #ff4444;
+}
+.toast-error .toast-icon {
+    color: #ff4444;
+}
+
+.toast-warning {
+    border-left-color: #ffb300;
+}
+.toast-warning .toast-icon {
+    color: #ffb300;
+}
+
+.toast-info {
+    border-left-color: #00d2ff;
+}
+.toast-info .toast-icon {
+    color: #00d2ff;
+}
+
+@keyframes toastSlideIn {
+    0% { transform: translateX(120%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+.toast-closing {
+    animation: toastFadeOut 0.3s forwards;
+}
+
+@keyframes toastFadeOut {
+    0% { transform: translateX(0); opacity: 1; }
+    100% { transform: translateX(120%); opacity: 0; }
+}
+
+/* Responsivo para móviles */
+@media (max-width: 600px) {
+    .toast-container {
+        top: auto;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        align-items: center;
+    }
+    
+    .toast-notification {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+    
+    @keyframes toastSlideIn {
+        0% { transform: translateY(100%); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+    }
+    
+    @keyframes toastFadeOut {
+        0% { transform: translateY(0); opacity: 1; }
+        100% { transform: translateY(100%); opacity: 0; }
+    }
+}
+
+/* =========================================
+   SISTEMA DE SWEETALERT2 (crypto-swal)
+   ========================================= */
+.crypto-swal-popup {
+    background: rgba(15, 18, 25, 0.85) !important;
+    border: 1px solid rgba(0, 200, 255, 0.15) !important;
+    border-radius: 16px !important;
+    padding: 30px !important;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05) inset, 0 0 20px rgba(0, 200, 255, 0.1) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    width: 90% !important;
+    max-width: 400px !important;
+    color: #fff !important;
+}
+
+.crypto-swal-popup.swal-danger {
+    border-color: rgba(255, 68, 119, 0.3) !important;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 68, 119, 0.15) !important;
+}
+
+.crypto-swal-popup.swal-warning {
+    border-color: rgba(241, 196, 15, 0.3) !important;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(241, 196, 15, 0.15) !important;
+}
+
+.crypto-swal-title {
+    color: #ffffff !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 1.3rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 12px !important;
+    letter-spacing: -0.3px !important;
+}
+
+.crypto-swal-content {
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 0.95rem !important;
+    line-height: 1.6 !important;
+    margin-top: 10px !important;
+}
+
+.crypto-swal-actions {
+    margin-top: 30px !important;
+    gap: 12px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+}
+
+.crypto-swal-actions .btn {
+    margin: 0 !important;
+    flex: 1;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    padding: 12px !important;
+    transition: all 0.2s ease !important;
+}
+
+.crypto-swal-confirm {
+    background: linear-gradient(135deg, rgba(0,200,255,0.8), rgba(0,100,255,0.8)) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(0, 200, 255, 0.3) !important;
+}
+
+.crypto-swal-confirm:hover {
+    background: linear-gradient(135deg, rgba(0,200,255,1), rgba(0,100,255,1)) !important;
+    box-shadow: 0 6px 20px rgba(0, 200, 255, 0.4) !important;
+    transform: translateY(-1px) !important;
+}
+
+.crypto-swal-popup.swal-danger .crypto-swal-confirm {
+    background: linear-gradient(135deg, rgba(255,68,119,0.8), rgba(200,30,80,0.8)) !important;
+    box-shadow: 0 4px 15px rgba(255, 68, 119, 0.3) !important;
+}
+
+.crypto-swal-popup.swal-danger .crypto-swal-confirm:hover {
+    background: linear-gradient(135deg, rgba(255,68,119,1), rgba(200,30,80,1)) !important;
+    box-shadow: 0 6px 20px rgba(255, 68, 119, 0.4) !important;
+}
+
+.crypto-swal-cancel {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.crypto-swal-cancel:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+}
+
+.crypto-swal-icon {
+    border: none !important;
+    margin: 0 auto 15px auto !important;
+    width: 60px !important;
+    height: 60px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    padding: 12px !important;
+}
+
+.crypto-swal-popup.swal-danger .crypto-swal-icon {
+    background: rgba(255, 68, 119, 0.1) !important;
+}
+.crypto-swal-popup.swal-warning .crypto-swal-icon {
+    background: rgba(241, 196, 15, 0.1) !important;
+}
+.crypto-swal-popup.swal-info .crypto-swal-icon {
+    background: rgba(0, 200, 255, 0.1) !important;
+}
+
+.crypto-swal-icon svg {
+    width: 100% !important;
+    height: 100% !important;
+}
+

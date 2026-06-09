@@ -3,106 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bóveda E2EE - Acceso Criptográfico</title>
-    <link rel="stylesheet" href="assets/style.css">
-    <link rel="stylesheet" href="css/style.css">
+    <title>NeonVault - Bóveda E2EE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/login.css">
     <link rel="stylesheet" href="css/crypto-theme.css">
+    <style>
+        .hidden { display: none !important; }
+    </style>
+    <script>
+        // Si ya hay sesión en este navegador, redirigir inmediatamente sin renderizar el login
+        if (localStorage.getItem('e2ee_identity')) {
+            window.location.replace('chat.html');
+        }
+    </script>
 </head>
-<body class="crypto-theme">
+<body>
 
-    <div id="login-modal" class="modal-overlay" style="position: relative; background: transparent;">
-        <!-- Se han eliminado los glow-orbs antiguos en favor del background de malla en body -->
+    <!-- Partículas de fondo -->
+    <div class="bg-particles">
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    </div>
+
+    <!-- Contenedor de autenticación -->
+    <div class="auth-container">
         
-        <div class="modal">
-            <div class="modal-header">
-                <!-- SVG Lock replacing emoji -->
-                <svg class="crypto-icon-svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    <circle cx="12" cy="16" r="1"></circle>
-                </svg>
-                <h2 id="modal-title" onmouseover="scrambleText(this, 'BÓVEDA E2EE')" data-original="BÓVEDA E2EE">Bóveda E2EE</h2>
+        <!-- VISTA DE LOGIN -->
+        <div class="auth-card" id="view-login">
+            <!-- Logo -->
+            <div class="auth-logo">
+                <div class="logo-icon" id="crypto-logo" style="cursor: pointer;">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h1 id="modal-title" onmouseover="scrambleText(this, 'NeonVault')" data-original="NeonVault">NeonVault</h1>
                 <p>Identidad Criptográfica de Conocimiento Cero</p>
             </div>
-            
-            <div class="modal-body" id="view-login">
-                <div class="input-group">
+
+            <!-- Alerta de error -->
+            <div class="alert alert-error" id="status-message" style="display: none;">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span id="alertErrorMessage"></span>
+            </div>
+
+            <!-- Formulario de login -->
+            <form id="login-form" autocomplete="off">
+                <div class="form-group">
                     <label for="login-username">Usuario Secreto</label>
-                    <input type="text" id="login-username" placeholder="[ ingresa_usuario ]" autocomplete="off">
-                </div>
-                
-                <div class="input-group">
-                    <label for="login-password">Contraseña Secreta</label>
-                    <div style="position: relative;">
-                        <input type="password" id="login-password" placeholder="[ llave_maestra ]" style="width: 100%; padding-right: 40px;">
-                        <svg onclick="togglePasswordSVG('login-password', this)" class="toggle-pwd-icon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user-ninja"></i>
+                        <input type="text" id="login-username" placeholder="[ ingresa_usuario ]" autocomplete="off">
                     </div>
                 </div>
                 
-                <div class="action-buttons">
-                    <button id="btn-login" class="btn-primary" style="width: 100%;" onmouseover="scrambleText(this, 'AUTENTICAR')">AUTENTICAR</button>
+                <div class="form-group">
+                    <label for="login-password">Llave Maestra</label>
+                    <div class="input-wrapper" style="position: relative;">
+                        <i class="fa-solid fa-key"></i>
+                        <input type="password" id="login-password" placeholder="[ llave_maestra ]" autocomplete="off" style="padding-right: 40px;">
+                        <i class="fa-solid fa-eye" onclick="togglePasswordSVG('login-password', this)" style="position: absolute; right: 14px; left: auto; cursor: pointer; pointer-events: auto; color: var(--text-muted);"></i>
+                    </div>
                 </div>
-                <div style="text-align: center; margin-top: 15px;">
-                    <a href="#" id="link-to-register" class="tech-link" style="text-decoration: none; font-size: 0.8rem;">[ ¿No tienes bóveda? Crear Nodo ]</a>
+
+                <div class="form-group">
+                    <label for="login-pin">PIN de Bóveda (4 dígitos)</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-th"></i>
+                        <input type="password" id="login-pin" maxlength="4" pattern="\d{4}" placeholder="[ pin ]" autocomplete="off">
+                    </div>
                 </div>
+
+                <button type="button" class="btn btn-primary" id="btn-login" onmouseover="scrambleText(this, 'AUTENTICAR')">
+                    <i class="fa-solid fa-right-to-bracket"></i> AUTENTICAR
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <a href="#" id="link-to-register">[ ¿No tienes bóveda? Crear Nodo ]</a>
+            </div>
+        </div>
+
+        <!-- VISTA DE REGISTRO (Oculto por defecto) -->
+        <div class="auth-card hidden" id="view-register">
+            <!-- Logo -->
+            <div class="auth-logo">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-microchip"></i>
+                </div>
+                <h1 onmouseover="scrambleText(this, 'InitNode')" data-original="InitNode">InitNode</h1>
+                <p>Generación de Llaves Locales</p>
             </div>
 
-            <div class="modal-body hidden" id="view-register">
-                <div class="input-group">
+            <!-- Formulario de Registro -->
+            <form id="register-form" autocomplete="off">
+                <div class="form-group">
                     <label for="reg-alias">Alias Público (Público)</label>
-                    <input type="text" id="reg-alias" placeholder="[ ej: Node_01 ]" autocomplete="off">
-                </div>
-
-                <div class="input-group">
-                    <label for="reg-username">Usuario Secreto (Privado)</label>
-                    <input type="text" id="reg-username" placeholder="[ ej: sys_admin ]" autocomplete="off">
-                    <span id="username-error" style="color: #ff4444; font-size: 0.75rem; margin-top: 5px; display: none; font-family: 'Space Mono', monospace;"></span>
-                </div>
-                
-                <div class="input-group">
-                    <label for="reg-password">Llave Maestra</label>
-                    <div style="position: relative;">
-                        <input type="password" id="reg-password" placeholder="[ genera_llave ]" style="width: 100%; padding-right: 40px;">
-                        <svg onclick="togglePasswordSVG('reg-password', this)" class="toggle-pwd-icon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-mask"></i>
+                        <input type="text" id="reg-alias" placeholder="[ ej: Node_01 ]" autocomplete="off">
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label for="reg-username">Usuario Secreto (Privado)</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user-secret"></i>
+                        <input type="text" id="reg-username" placeholder="[ ej: sys_admin ]" autocomplete="off">
+                    </div>
+                    <span id="username-error" style="color: var(--danger); font-size: 0.75rem; margin-top: 5px; display: none;"></span>
+                </div>
                 
-                <div class="action-buttons">
-                    <button id="btn-register" class="btn-secondary" style="width: 100%;" onmouseover="scrambleText(this, 'INICIALIZAR_BOVEDA')">INICIALIZAR_BOVEDA</button>
+                <div class="form-group">
+                    <label for="reg-password">Llave Maestra</label>
+                    <div class="input-wrapper" style="position: relative;">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="reg-password" placeholder="[ genera_llave ]" autocomplete="off" style="padding-right: 40px;">
+                        <i class="fa-solid fa-eye" onclick="togglePasswordSVG('reg-password', this)" style="position: absolute; right: 14px; left: auto; cursor: pointer; pointer-events: auto; color: var(--text-muted);"></i>
+                    </div>
                 </div>
-                <div style="text-align: center; margin-top: 15px;">
-                    <a href="#" id="link-to-login" class="tech-link" style="text-decoration: none; font-size: 0.8rem;">[ Ya tengo un nodo. Conectar ]</a>
+
+                <div class="form-group">
+                    <label for="reg-pin">PIN de Bóveda (4 dígitos)</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-th"></i>
+                        <input type="password" id="reg-pin" maxlength="4" pattern="\d{4}" placeholder="[ 1234 ]" autocomplete="off">
+                    </div>
+                    <span style="color: var(--text-muted); font-size: 0.75rem; margin-top: 5px; display: block;">Requerido para abrir la app sin ingresar Llave Maestra.</span>
                 </div>
-            </div>
-            <div class="modal-footer">
-                Algoritmo manual de 5 Pilares. Todo ocurre localmente.
+
+                <button type="button" class="btn btn-outline" id="btn-register" onmouseover="scrambleText(this, 'INICIALIZAR_BOVEDA')">
+                    <i class="fa-solid fa-terminal"></i> INICIALIZAR_BOVEDA
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <a href="#" id="link-to-login">[ Ya tengo un nodo. Conectar ]</a>
             </div>
         </div>
     </div>
 
-    <script src="js/crypto.js?v=1.1"></script>
-    <script src="js/login.js?v=1.1"></script>
+    <!-- Generador de Entropía Visual (Lógica mantenida, adaptada a NeonVault) -->
+    <div id="entropy-layer" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(8, 8, 15, 0.95); backdrop-filter: blur(10px); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; color: white;">
+        <i class="fa-solid fa-arrows-up-down-left-right" style="font-size: 4rem; color: var(--neon-blue); text-shadow: var(--neon-glow); margin-bottom: 20px;"></i>
+        <h2 style="font-family: var(--font-mono); margin-bottom: 10px; font-weight: 600; text-transform: uppercase;">
+            Mueve el ratón
+        </h2>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">Generando entropía física para tu bóveda criptográfica...</p>
+        <div style="width: 300px; height: 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; margin-top: 20px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);">
+            <div id="entropy-progress" style="width: 0%; height: 100%; background: var(--success); box-shadow: 0 0 10px var(--success); transition: width 0.1s;"></div>
+        </div>
+        <p id="entropy-pct" style="margin-top: 15px; font-weight: bold; color: var(--success);">0%</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/crypto.js?v=2.3"></script>
+    <script src="js/login.js?v=2.3"></script>
     <script>
-        function togglePasswordSVG(inputId, svgElement) {
+        function togglePasswordSVG(inputId, iconElement) {
             const input = document.getElementById(inputId);
             if (input.type === 'password') {
                 input.type = 'text';
-                svgElement.classList.add('active');
+                iconElement.classList.replace('fa-eye', 'fa-eye-slash');
+                iconElement.style.color = 'var(--neon-blue)';
             } else {
                 input.type = 'password';
-                svgElement.classList.remove('active');
+                iconElement.classList.replace('fa-eye-slash', 'fa-eye');
+                iconElement.style.color = 'var(--text-muted)';
             }
         }
 
-        // Acceso oculto a la documentación con 5 clics en el candado
+        // Acceso oculto a la documentación con 5 clics
         let lockClicks = 0;
-        document.querySelector('.crypto-icon-svg').addEventListener('click', () => {
+        document.getElementById('crypto-logo').addEventListener('click', () => {
             lockClicks++;
             if (lockClicks >= 5) {
                 window.open('docs.html', '_blank');

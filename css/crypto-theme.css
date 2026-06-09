@@ -1,329 +1,441 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* crypto-theme.css - FusiÃ³n de LÃ³gica Original con Estilo NeonVault */
 
 :root {
-    --bg-color: #000000;
-    --panel-bg: #18191A;
-    --chat-bg: #242526;
-    --text-primary: #E4E6EB;
-    --text-secondary: #B0B3B8;
-    --accent-color: #0084ff;
-    --accent-hover: #0073e6;
-    --bubble-me: linear-gradient(135deg, #0084ff, #00c6ff);
-    --bubble-them: #3A3B3C;
-    --danger-color: #ff4a4a;
-    --success-color: #31a24c;
-    --border-color: #3E4042;
-    --font-main: 'Inter', -apple-system, sans-serif;
+    --bg-color: #08080f;
+    --panel-bg: #14141f;
+    --text-primary: #e8e8f0;
+    --text-secondary: #9090a8;
+    --accent-color: #00c8ff;
+    --accent-hover: #0088cc;
+    --danger-color: #ff4477;
+    --success-color: #00e696;
+    --warning-color: #ffb347;
+    --border-color: #1e1e30;
+    
+    /* Variables de NeonVault Originales */
+    --bg-message-sent: #0a1e30;
+    --bg-message-received: #141420;
+    --neon-glow: 0 0 12px rgba(0, 200, 255, 0.45);
+    
+    /* Mapping con variables originales de style.css */
+    --bubble-me: var(--bg-message-sent);
+    --bubble-me-border: rgba(0, 180, 255, 0.2);
+    --bubble-them: var(--bg-message-received);
+    --bubble-them-border: #252538;
 }
 
-body.crypto-theme {
+body {
     background-color: var(--bg-color);
-    font-family: var(--font-main);
-    background-image: none;
-    color: var(--text-primary);
+    background-image: radial-gradient(ellipse at 30% 20%, rgba(0, 180, 255, 0.04) 0%, transparent 60%),
+                      radial-gradient(ellipse at 70% 75%, rgba(0, 150, 255, 0.03) 0%, transparent 60%),
+                      radial-gradient(ellipse at 50% 50%, rgba(0, 200, 255, 0.02) 0%, transparent 80%);
 }
 
-/* Override Container */
-body.crypto-theme .container {
+/* === MODIFICADORES DEL CONTENEDOR PRINCIPAL === */
+.container {
     background: var(--panel-bg);
     border: 1px solid var(--border-color);
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    border-radius: 14px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
 }
 
-body.crypto-theme .sidebar {
-    background: var(--panel-bg);
+.sidebar {
+    background: #10101c;
     border-right: 1px solid var(--border-color);
 }
 
-body.crypto-theme .sidebar-header {
-    background: transparent;
+.chat-area {
+    background: #0c0c16;
+}
+
+.chat-header {
+    background: #101018;
     border-bottom: 1px solid var(--border-color);
 }
 
-body.crypto-theme .sidebar-header h2 {
-    font-family: var(--font-main);
-    font-weight: 700;
-    color: var(--text-primary);
-    text-transform: none;
-    letter-spacing: normal;
-    text-shadow: none;
-}
-
-body.crypto-theme .user-item {
-    font-family: var(--font-main);
-    border-radius: 8px;
-    padding: 12px;
-    border-left: none;
-    margin: 4px 8px;
-    transition: background 0.2s;
-}
-
-body.crypto-theme .user-item:hover {
-    background: rgba(255,255,255,0.05);
-    border-left: none;
-}
-
-body.crypto-theme .user-item.active {
-    background: rgba(255,255,255,0.1);
-    border-left: none;
-}
-
-body.crypto-theme .user-item strong {
-    font-weight: 600;
-    font-size: 0.95rem;
-}
-
-/* Chat Header */
-body.crypto-theme .chat-area {
-    background: var(--bg-color);
-}
-
-body.crypto-theme .chat-header {
-    background: var(--panel-bg);
+.sidebar-header {
     border-bottom: 1px solid var(--border-color);
-    padding: 16px 20px;
 }
 
-body.crypto-theme .chat-header h3 {
-    font-family: var(--font-main);
-    text-transform: none;
-    font-weight: 600;
-    font-size: 1.1rem;
-    letter-spacing: normal;
+/* === LISTA DE USUARIOS (NeonVault Style) === */
+.user-item {
+    border-radius: 10px;
+    border: 1px solid transparent;
+}
+.user-item.active {
+    background: rgba(0, 200, 255, 0.06) !important;
+    border: 1px solid rgba(0, 200, 255, 0.2) !important;
+    border-left: 1px solid rgba(0, 200, 255, 0.2) !important;
+    box-shadow: 0 0 12px rgba(0, 180, 255, 0.06);
 }
 
-/* Chat Messages */
-body.crypto-theme .chat-messages {
-    background: var(--bg-color);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+/* === INPUTS === */
+.chat-input {
+    background: #101018;
+    border-top: 1px solid var(--border-color);
 }
 
-body.crypto-theme .message {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    padding: 0;
-    margin-bottom: 4px;
-    max-width: 75%;
-    display: flex;
-    flex-direction: column;
+.chat-input input {
+    background: #1a1a28;
+    border: 1.5px solid var(--border-color);
+    border-radius: 22px;
 }
 
-body.crypto-theme .message.me {
-    align-items: flex-end;
+.chat-input input:focus {
+    border-color: var(--accent-hover);
+    box-shadow: 0 0 0 4px rgba(0, 200, 255, 0.05);
 }
 
-body.crypto-theme .message.them {
-    align-items: flex-start;
+.chat-input button {
+    background: linear-gradient(135deg, #0066cc, #0088dd);
+    box-shadow: 0 4px 14px rgba(0, 160, 255, 0.3);
 }
 
-body.crypto-theme .has-avatar {
-    flex-direction: row;
-    align-items: flex-end;
-    gap: 8px;
+.chat-input button:hover {
+    box-shadow: 0 6px 22px rgba(0, 180, 255, 0.5), var(--neon-glow);
+    background: linear-gradient(135deg, #0077dd, #0099ee);
 }
 
-body.crypto-theme .avatar-circle {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--accent-color);
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: 600;
-    font-size: 0.8rem;
-    flex-shrink: 0;
-    margin-bottom: 16px;
-}
-
-body.crypto-theme .message-content {
-    background: var(--bubble-them);
-    color: var(--text-primary);
-    padding: 10px 14px;
+/* === BURBUJAS DE CHAT === */
+.message {
     border-radius: 18px;
-    position: relative;
-    font-size: 0.95rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.message.me {
+    border-bottom-right-radius: 6px;
+    color: #d0e8f8;
+}
+.message.them {
+    border-bottom-left-radius: 6px;
+}
+.message .time {
+    color: var(--accent-hover); /* Para el E2EE tag o status del mensaje */
+    font-weight: bold;
+}
+
+/* === LOGIN (Adaptando auth-container al auth-card de NeonVault) === */
+.auth-container {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 40px 32px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+    backdrop-filter: blur(10px);
+}
+
+.auth-container h2 {
+    color: var(--accent-color);
+    text-shadow: var(--neon-text-glow);
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.input-group input {
+    background: #1a1a28;
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+.input-group input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 4px rgba(0, 200, 255, 0.06), 0 0 18px rgba(0, 200, 255, 0.1);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #0066cc 0%, #0088dd 40%, #00a8f0 100%);
+    box-shadow: 0 4px 18px rgba(0, 160, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 6px 28px rgba(0, 180, 255, 0.5), var(--neon-glow);
+    background: linear-gradient(135deg, #0077dd 0%, #0099ee 40%, #00b4f8 100%);
+}
+
+/* === PARTICULAS PARA EL LOGIN === */
+.bg-particles {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: -1; opacity: 0.5;
+}
+
+.particle {
+    position: absolute; width: 2px; height: 2px;
+    background: var(--accent-color); border-radius: 50%;
+    animation: floatUp 7s infinite ease-in; box-shadow: 0 0 6px var(--accent-color);
+}
+
+.particle:nth-child(1) { left: 12%; animation-delay: 0s; animation-duration: 8s; }
+.particle:nth-child(2) { left: 28%; animation-delay: 1.5s; animation-duration: 6.5s; }
+.particle:nth-child(3) { left: 44%; animation-delay: 3s; animation-duration: 7.5s; }
+.particle:nth-child(4) { left: 58%; animation-delay: 0.8s; animation-duration: 9s; }
+.particle:nth-child(5) { left: 72%; animation-delay: 2.2s; animation-duration: 6s; }
+
+@keyframes floatUp {
+    0% { transform: translateY(105vh) scale(1); opacity: 0; }
+    15% { opacity: 1; }
+    50% { opacity: 0.7; }
+    85% { opacity: 0.15; }
+    100% { transform: translateY(-10vh) scale(0.3); opacity: 0; }
+}
+
+/* === UTILS === */
+.hidden {
+    display: none !important;
+}
+
+/* =========================================
+   SISTEMA DE NOTIFICACIONES FLOTANTES (TOASTS)
+   ========================================= */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.toast-notification {
+    display: flex;
+    align-items: center;
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 12px 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    min-width: 300px;
+    max-width: 400px;
+    pointer-events: auto;
+    animation: toastSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-left: 4px solid transparent;
+}
+
+.toast-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-text {
+    font-size: 0.9rem;
+    color: var(--text-primary);
     line-height: 1.4;
     word-break: break-word;
 }
 
-body.crypto-theme .message.me .message-content {
-    background: var(--bubble-me);
-    color: #ffffff;
-    border-bottom-right-radius: 4px;
-}
-
-body.crypto-theme .message.them .message-content {
-    border-bottom-left-radius: 4px;
-}
-
-body.crypto-theme .message .time {
-    font-family: var(--font-main);
-    font-size: 0.7rem;
-    color: var(--text-secondary);
-    margin-top: 4px;
-    opacity: 1;
-    position: absolute;
-    bottom: -18px;
-}
-
-body.crypto-theme .message.me .time {
-    right: 4px;
-    color: rgba(255,255,255,0.6); /* If inside bubble? No, outside */
-    color: var(--text-secondary);
-}
-
-body.crypto-theme .message.them .time {
-    left: 4px;
-}
-
-/* Increase bottom margin of messages to accommodate time */
-body.crypto-theme .message {
-    margin-bottom: 22px;
-}
-
-/* Chat Input */
-body.crypto-theme .chat-input-area {
-    background: var(--panel-bg);
-    border-top: 1px solid var(--border-color);
-    padding: 12px 16px;
-}
-
-body.crypto-theme .chat-input-area input[type="text"] {
-    font-family: var(--font-main);
-    background: var(--bubble-them);
+.toast-close {
+    background: transparent;
     border: none;
-    border-radius: 20px;
-    color: var(--text-primary);
-    padding: 10px 16px;
-}
-
-body.crypto-theme .chat-input-area input[type="text"]:focus {
-    box-shadow: none;
-}
-
-body.crypto-theme .chat-input-area #btn-send {
-    font-family: var(--font-main);
-    background: var(--accent-color);
-    color: white;
-    border: none;
-    border-radius: 20px;
-    text-transform: none;
-    font-weight: 600;
-    letter-spacing: normal;
-}
-
-body.crypto-theme .chat-input-area #btn-send:hover:not(:disabled) {
-    background: var(--accent-hover);
-    transform: none;
-    box-shadow: none;
-}
-
-/* Modals */
-body.crypto-theme .modal {
-    background: var(--panel-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-}
-
-body.crypto-theme .modal-header h2 {
-    font-family: var(--font-main);
-    text-transform: none;
-    color: var(--text-primary);
-    text-shadow: none;
-    letter-spacing: normal;
-}
-
-body.crypto-theme .modal-header p {
-    font-family: var(--font-main);
     color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    margin-left: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
 }
 
-body.crypto-theme .input-group label {
-    font-family: var(--font-main);
-    color: var(--text-secondary);
-    text-transform: none;
-    letter-spacing: normal;
-}
-
-body.crypto-theme .input-group input {
-    font-family: var(--font-main);
-    background: var(--bg-color);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
-    border-radius: 8px;
-}
-
-body.crypto-theme .btn-primary {
-    background: var(--accent-color);
-    color: white;
-    border: none;
-    box-shadow: none;
-    font-family: var(--font-main);
-    text-transform: none;
-    letter-spacing: normal;
-    border-radius: 8px;
-}
-
-body.crypto-theme .btn-primary:hover {
-    background: var(--accent-hover);
-    box-shadow: none;
-    transform: none;
-}
-
-body.crypto-theme .btn-secondary {
-    background: var(--bubble-them);
-    border: none !important;
-    color: var(--text-primary);
-    font-family: var(--font-main);
-    text-transform: none;
-    letter-spacing: normal;
-    border-radius: 8px;
-}
-
-body.crypto-theme .btn-secondary:hover:not(:disabled) {
-    background: rgba(255,255,255,0.1);
+.toast-close:hover {
     color: var(--text-primary);
 }
 
-/* SweetAlert2 Overrides */
+/* Tipos de Toast */
+.toast-success {
+    border-left-color: #4caf50;
+}
+.toast-success .toast-icon {
+    color: #4caf50;
+}
+
+.toast-error {
+    border-left-color: #ff4444;
+}
+.toast-error .toast-icon {
+    color: #ff4444;
+}
+
+.toast-warning {
+    border-left-color: #ffb300;
+}
+.toast-warning .toast-icon {
+    color: #ffb300;
+}
+
+.toast-info {
+    border-left-color: #00d2ff;
+}
+.toast-info .toast-icon {
+    color: #00d2ff;
+}
+
+@keyframes toastSlideIn {
+    0% { transform: translateX(120%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+.toast-closing {
+    animation: toastFadeOut 0.3s forwards;
+}
+
+@keyframes toastFadeOut {
+    0% { transform: translateX(0); opacity: 1; }
+    100% { transform: translateX(120%); opacity: 0; }
+}
+
+/* Responsivo para móviles */
+@media (max-width: 600px) {
+    .toast-container {
+        top: auto;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        align-items: center;
+    }
+    
+    .toast-notification {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+    
+    @keyframes toastSlideIn {
+        0% { transform: translateY(100%); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+    }
+    
+    @keyframes toastFadeOut {
+        0% { transform: translateY(0); opacity: 1; }
+        100% { transform: translateY(100%); opacity: 0; }
+    }
+}
+
+/* =========================================
+   SISTEMA DE SWEETALERT2 (crypto-swal)
+   ========================================= */
 .crypto-swal-popup {
-    background: var(--panel-bg) !important;
-    border: 1px solid var(--border-color);
-    border-radius: 12px !important;
+    background: rgba(15, 18, 25, 0.85) !important;
+    border: 1px solid rgba(0, 200, 255, 0.15) !important;
+    border-radius: 16px !important;
+    padding: 30px !important;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05) inset, 0 0 20px rgba(0, 200, 255, 0.1) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    width: 90% !important;
+    max-width: 400px !important;
+    color: #fff !important;
+}
+
+.crypto-swal-popup.swal-danger {
+    border-color: rgba(255, 68, 119, 0.3) !important;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 68, 119, 0.15) !important;
+}
+
+.crypto-swal-popup.swal-warning {
+    border-color: rgba(241, 196, 15, 0.3) !important;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(241, 196, 15, 0.15) !important;
 }
 
 .crypto-swal-title {
-    font-family: var(--font-main) !important;
-    text-transform: none !important;
-    color: var(--text-primary) !important;
-    letter-spacing: normal !important;
+    color: #ffffff !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 1.3rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 12px !important;
+    letter-spacing: -0.3px !important;
 }
 
-/* Remove glitch animations */
-body.crypto-theme .modal-header h2:hover {
-    animation: none;
+.crypto-swal-content {
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 0.95rem !important;
+    line-height: 1.6 !important;
+    margin-top: 10px !important;
 }
 
-/* Clean up icon colors */
-body.crypto-theme .crypto-icon-svg {
-    stroke: var(--accent-color);
-    filter: none;
+.crypto-swal-actions {
+    margin-top: 30px !important;
+    gap: 12px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
 }
 
-/* Typography elements */
-body.crypto-theme .status-badge {
-    background: rgba(0, 132, 255, 0.1);
-    color: var(--accent-color);
-    border: none;
-    font-family: var(--font-main);
-    text-transform: none;
-    letter-spacing: normal;
-    font-weight: 500;
+.crypto-swal-actions .btn {
+    margin: 0 !important;
+    flex: 1;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    padding: 12px !important;
+    transition: all 0.2s ease !important;
 }
+
+.crypto-swal-confirm {
+    background: linear-gradient(135deg, rgba(0,200,255,0.8), rgba(0,100,255,0.8)) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(0, 200, 255, 0.3) !important;
+}
+
+.crypto-swal-confirm:hover {
+    background: linear-gradient(135deg, rgba(0,200,255,1), rgba(0,100,255,1)) !important;
+    box-shadow: 0 6px 20px rgba(0, 200, 255, 0.4) !important;
+    transform: translateY(-1px) !important;
+}
+
+.crypto-swal-popup.swal-danger .crypto-swal-confirm {
+    background: linear-gradient(135deg, rgba(255,68,119,0.8), rgba(200,30,80,0.8)) !important;
+    box-shadow: 0 4px 15px rgba(255, 68, 119, 0.3) !important;
+}
+
+.crypto-swal-popup.swal-danger .crypto-swal-confirm:hover {
+    background: linear-gradient(135deg, rgba(255,68,119,1), rgba(200,30,80,1)) !important;
+    box-shadow: 0 6px 20px rgba(255, 68, 119, 0.4) !important;
+}
+
+.crypto-swal-cancel {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.crypto-swal-cancel:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+}
+
+.crypto-swal-icon {
+    border: none !important;
+    margin: 0 auto 15px auto !important;
+    width: 60px !important;
+    height: 60px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    padding: 12px !important;
+}
+
+.crypto-swal-popup.swal-danger .crypto-swal-icon {
+    background: rgba(255, 68, 119, 0.1) !important;
+}
+.crypto-swal-popup.swal-warning .crypto-swal-icon {
+    background: rgba(241, 196, 15, 0.1) !important;
+}
+.crypto-swal-popup.swal-info .crypto-swal-icon {
+    background: rgba(0, 200, 255, 0.1) !important;
+}
+
+.crypto-swal-icon svg {
+    width: 100% !important;
+    height: 100% !important;
+}
+

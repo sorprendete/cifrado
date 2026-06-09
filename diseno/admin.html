@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeonVault - Panel de Administración</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <script src="js/admin.js" defer></script>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="admin-header">
+        <div class="brand">
+            <div class="logo-icon">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h1>Neon<span>Vault</span></h1>
+            <span class="badge">Admin</span>
+        </div>
+        <div class="header-actions">
+            <a href="chat.html" class="btn btn-sm">
+                <i class="fa-solid fa-message"></i> Ir al Chat
+            </a>
+            <a href="login.html" class="btn btn-sm" id="btnLogoutAdmin">
+                <i class="fa-solid fa-right-from-bracket"></i> Salir
+            </a>
+        </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <div class="admin-container">
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon pending">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+                <div>
+                    <div class="stat-value" id="statPending">0</div>
+                    <div class="stat-label">Pendientes</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon approved">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div>
+                    <div class="stat-value" id="statApproved">0</div>
+                    <div class="stat-label">Aprobados</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon rejected">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                </div>
+                <div>
+                    <div class="stat-value" id="statRejected">0</div>
+                    <div class="stat-label">Rechazados</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon total">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <div>
+                    <div class="stat-value" id="statTotal">0</div>
+                    <div class="stat-label">Total Usuarios</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="pending">
+                <i class="fa-solid fa-clock"></i> Pendientes
+            </button>
+            <button class="tab-btn" data-tab="approved">
+                <i class="fa-solid fa-check"></i> Aprobados
+            </button>
+            <button class="tab-btn" data-tab="rejected">
+                <i class="fa-solid fa-ban"></i> Rechazados
+            </button>
+            <button class="tab-btn" data-tab="all">
+                <i class="fa-solid fa-list"></i> Todos
+            </button>
+        </div>
+
+        <!-- Tabla -->
+        <div class="table-wrapper">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Email</th>
+                            <th>Fecha de registro</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- Filas generadas dinámicamente -->
+                    </tbody>
+                </table>
+                <div class="empty-table" id="emptyTableMsg" style="display:none;">
+                    <i class="fa-solid fa-inbox"></i>
+                    <span>No hay usuarios en esta categoría</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toastContainer"></div>
+</body>
+</html>

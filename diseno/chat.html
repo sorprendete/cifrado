@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeonVault - Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/chat.css">
+    <script src="js/chat.js" defer></script>
+</head>
+<body>
+
+    <!-- Overlay para móvil -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- === SIDEBAR === -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Header con info del usuario actual -->
+        <div class="sidebar-header">
+            <div class="user-info" id="currentUserInfo" title="Mi perfil">
+                <div class="avatar online" style="position:relative; background: linear-gradient(135deg, #1a4a6e, #0d3050);">
+                    <span id="currentUserInitials">TU</span>
+                    <span style="position:absolute;bottom:1px;right:1px;width:10px;height:10px;background:var(--success);border-radius:50%;border:2px solid var(--bg-sidebar);"></span>
+                </div>
+                <div>
+                    <div class="user-name" id="currentUserName">Tú</div>
+                    <div class="user-status">En línea</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" title="Configuración" id="btnSettings">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+                <button class="icon-btn" title="Cerrar sesión" id="btnLogout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Búsqueda -->
+        <div class="sidebar-search">
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" placeholder="Buscar conversación..." id="searchChat">
+            </div>
+        </div>
+
+        <!-- Lista de chats -->
+        <div class="chat-list" id="chatList">
+            <!-- Items dinámicos generados por JS -->
+        </div>
+    </aside>
+
+    <!-- === MAIN CHAT === -->
+    <main class="main-chat" id="mainChat">
+        <!-- Header del chat activo -->
+        <div class="chat-header" id="chatHeader">
+            <button class="back-btn" id="btnBack" title="Volver a lista">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div class="avatar" style="width:38px;height:38px;font-size:0.8rem;background:linear-gradient(135deg,#1a3a5c,#0d2840);" id="activeChatAvatar">
+                <span>?</span>
+            </div>
+            <div class="chat-contact-info">
+                <div class="chat-contact-name">
+                    <span id="activeChatName">Selecciona un chat</span>
+                    <span class="encryption-indicator" id="encryptionIndicator" style="display:none;">
+                        <i class="fa-solid fa-lock"></i> E2E
+                    </span>
+                </div>
+                <div class="chat-contact-status" id="activeChatStatus"></div>
+            </div>
+            <div class="chat-actions">
+                <button class="icon-btn" title="Información del contacto" id="btnContactInfo">
+                    <i class="fa-solid fa-circle-info"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Área de mensajes / Estado vacío -->
+        <div class="messages-area" id="messagesArea">
+            <div class="empty-state" id="emptyState">
+                <i class="fa-solid fa-message"></i>
+                <h3>Mensajería Cifrada</h3>
+                <p>Selecciona una conversación para comenzar. Todos los mensajes viajan cifrados de extremo a extremo.</p>
+            </div>
+        </div>
+
+        <!-- Input de mensaje -->
+        <div class="input-area" id="inputArea">
+            <textarea id="messageInput" placeholder="Escribe un mensaje..." rows="1" disabled></textarea>
+            <button class="send-btn" id="btnSend" disabled title="Enviar mensaje">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </main>
+</body>
+</html>

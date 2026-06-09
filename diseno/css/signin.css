@@ -1,0 +1,513 @@
+:root {
+    --bg-primary: #08080f;
+    --bg-secondary: #101018;
+    --bg-card: #14141f;
+    --bg-input: #1a1a28;
+    --border: #1e1e30;
+    --text-primary: #e8e8f0;
+    --text-secondary: #9090a8;
+    --text-muted: #606078;
+    --neon-blue: #00c8ff;
+    --neon-blue-dim: #0088cc;
+    --neon-glow: 0 0 12px rgba(0, 200, 255, 0.45);
+    --neon-glow-strong: 0 0 22px rgba(0, 200, 255, 0.7);
+    --neon-text-glow: 0 0 8px rgba(0, 200, 255, 0.55);
+    --danger: #ff4477;
+    --success: #00e696;
+    --warning: #ffb347;
+    --radius: 14px;
+    --radius-sm: 10px;
+    --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    background-image:
+        radial-gradient(ellipse at 25% 15%, rgba(0, 180, 255, 0.04) 0%, transparent 55%),
+        radial-gradient(ellipse at 75% 80%, rgba(0, 150, 255, 0.03) 0%, transparent 55%),
+        radial-gradient(ellipse at 50% 50%, rgba(0, 200, 255, 0.02) 0%, transparent 80%);
+}
+
+/* Partículas */
+.bg-particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.45;
+}
+
+.particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: var(--neon-blue);
+    border-radius: 50%;
+    animation: floatUp 7.5s infinite ease-in;
+    box-shadow: 0 0 6px var(--neon-blue);
+}
+
+.particle:nth-child(1) {
+    left: 10%;
+    animation-delay: 0s;
+    animation-duration: 8.5s;
+}
+
+.particle:nth-child(2) {
+    left: 30%;
+    animation-delay: 1.8s;
+    animation-duration: 6.2s;
+}
+
+.particle:nth-child(3) {
+    left: 50%;
+    animation-delay: 3.2s;
+    animation-duration: 7.8s;
+}
+
+.particle:nth-child(4) {
+    left: 68%;
+    animation-delay: 0.6s;
+    animation-duration: 9.2s;
+}
+
+.particle:nth-child(5) {
+    left: 82%;
+    animation-delay: 2.5s;
+    animation-duration: 6.8s;
+}
+
+.particle:nth-child(6) {
+    left: 22%;
+    animation-delay: 4.5s;
+    animation-duration: 7.2s;
+}
+
+.particle:nth-child(7) {
+    left: 55%;
+    animation-delay: 5.5s;
+    animation-duration: 8s;
+}
+
+.particle:nth-child(8) {
+    left: 78%;
+    animation-delay: 3.8s;
+    animation-duration: 6.5s;
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(105vh) scale(1);
+        opacity: 0;
+    }
+
+    12% {
+        opacity: 1;
+    }
+
+    55% {
+        opacity: 0.6;
+    }
+
+    88% {
+        opacity: 0.1;
+    }
+
+    100% {
+        transform: translateY(-10vh) scale(0.25);
+        opacity: 0;
+    }
+}
+
+.auth-container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 460px;
+    padding: 20px;
+}
+
+.auth-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px 30px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+    animation: fadeSlideIn 0.5s ease-out;
+}
+
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.auth-logo {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.auth-logo .logo-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #0a0a1a 0%, #0d1a2d 100%);
+    border: 2px solid rgba(0, 200, 255, 0.35);
+    box-shadow: var(--neon-glow), 0 0 35px rgba(0, 180, 255, 0.1);
+    margin-bottom: 12px;
+    animation: logoPulse 3.5s ease-in-out infinite;
+}
+
+@keyframes logoPulse {
+
+    0%,
+    100% {
+        box-shadow: var(--neon-glow), 0 0 35px rgba(0, 180, 255, 0.1);
+    }
+
+    50% {
+        box-shadow: var(--neon-glow-strong), 0 0 50px rgba(0, 200, 255, 0.2);
+    }
+}
+
+.auth-logo .logo-icon i {
+    font-size: 26px;
+    color: var(--neon-blue);
+    text-shadow: var(--neon-text-glow);
+}
+
+.auth-logo h1 {
+    font-size: 1.55rem;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+}
+
+.auth-logo h1 span {
+    color: var(--neon-blue);
+    text-shadow: var(--neon-text-glow);
+}
+
+.auth-logo p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 3px;
+}
+
+/* Info box */
+.info-box {
+    background: rgba(0, 180, 255, 0.05);
+    border: 1px solid rgba(0, 200, 255, 0.18);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 22px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    line-height: 1.45;
+}
+
+.info-box i {
+    color: var(--neon-blue);
+    font-size: 1rem;
+    margin-top: 1px;
+    flex-shrink: 0;
+}
+
+/* Form */
+.form-group {
+    margin-bottom: 18px;
+    position: relative;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.form-group .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.form-group .input-wrapper i {
+    position: absolute;
+    left: 13px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    transition: color var(--transition);
+    pointer-events: none;
+    z-index: 2;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 14px 12px 40px;
+    background: var(--bg-input);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 0.92rem;
+    font-family: 'Inter', sans-serif;
+    transition: all var(--transition);
+    outline: none;
+}
+
+.form-group input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.65;
+}
+
+.form-group input:focus {
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 0 4px rgba(0, 200, 255, 0.06), 0 0 16px rgba(0, 200, 255, 0.08);
+}
+
+.form-group .input-wrapper:focus-within i {
+    color: var(--neon-blue);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 13px 24px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.93rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: all var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #0066cc 0%, #0088dd 40%, #00a8f0 100%);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(0, 160, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 6px 28px rgba(0, 180, 255, 0.5), var(--neon-glow);
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #0077dd 0%, #0099ee 40%, #00b4f8 100%);
+}
+
+.btn-primary:active {
+    transform: scale(0.97);
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.83rem;
+    color: var(--text-muted);
+}
+
+.auth-footer a {
+    color: var(--neon-blue);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all var(--transition);
+}
+
+.auth-footer a:hover {
+    text-shadow: var(--neon-text-glow);
+    text-decoration: underline;
+}
+
+/* Validación visual de contraseña */
+.password-strength {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 6px;
+    background: var(--border);
+    overflow: hidden;
+    transition: all var(--transition);
+}
+
+.password-strength .bar {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.35s ease, background 0.35s ease;
+    width: 0%;
+}
+
+.strength-weak {
+    background: var(--danger);
+    width: 30%;
+}
+
+.strength-medium {
+    background: var(--warning);
+    width: 65%;
+}
+
+.strength-strong {
+    background: var(--success);
+    width: 100%;
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: fadeSlideIn 0.4s ease-out;
+}
+
+.alert-error {
+    background: rgba(255, 68, 119, 0.08);
+    border: 1px solid rgba(255, 68, 119, 0.25);
+    color: #ff6b8a;
+}
+
+.alert-success {
+    background: rgba(0, 230, 150, 0.08);
+    border: 1px solid rgba(0, 230, 150, 0.25);
+    color: #00e696;
+}
+
+/* --- Estilos del modal (agregar en register.css) --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 40px 32px;
+    max-width: 440px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6), var(--neon-glow);
+    position: relative;
+    animation: modalSlideUp 0.35s ease-out;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+}
+.modal-close-btn:hover {
+    color: var(--neon-blue);
+    border-color: var(--neon-blue-dim);
+    box-shadow: var(--neon-glow);
+}
+
+/* Los estilos de .status-icon, .email-highlight, .btn-outline ya los tienes del pending-approval original;
+   si los moviste a register.css, se aplican automáticamente. */
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(40px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Adaptamos el tamaño del icono y espaciado para que sea idéntico al diseño anterior */
+.status-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    /* resto ya definido en tu CSS original */
+}
+
+@media (max-width: 500px) {
+    .auth-card {
+        padding: 26px 18px;
+        border-radius: var(--radius-sm);
+    }
+
+    .auth-logo .logo-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 13px;
+    }
+
+    .auth-logo .logo-icon i {
+        font-size: 21px;
+    }
+
+    .auth-logo h1 {
+        font-size: 1.35rem;
+    }
+
+    .form-group input {
+        padding: 11px 12px 11px 36px;
+        font-size: 0.88rem;
+    }
+
+    .btn {
+        padding: 12px 18px;
+        font-size: 0.88rem;
+    }
+}

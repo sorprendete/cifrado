@@ -112,45 +112,56 @@ function sha256(ascii) {
     return result;
 }
 
-// Función auxiliar para exponenciación modular segura (previene desbordamiento en JS)
+// Función auxiliar para exponenciación modular segura con BigInt nativo
 function modExp(base, exp, mod) {
-    let res = 1;
-    base = base % mod;
-    while (exp > 0) {
-        if (exp % 2 === 1) {
-            res = (res * base) % mod;
+    let res = 1n;
+    let b = BigInt(base) % BigInt(mod);
+    let e = BigInt(exp);
+    let m = BigInt(mod);
+    let zero = 0n;
+    let one = 1n;
+    let two = 2n;
+    while (e > zero) {
+        if (e % two === one) {
+            res = (res * b) % m;
         }
-        base = (base * base) % mod;
-        exp = Math.floor(exp / 2);
+        b = (b * b) % m;
+        e = e / two;
     }
     return res;
 }
 
 const MiCifrado = {
-    // Parámetros criptográficos del Vectorial Diffie-Hellman (Logaritmo Discreto)
-    modulo: 9999991, // Número primo seguro para evitar desbordamiento en JS (multiplicación max ~10^14)
-    matrizPublica: [735, 246, 891, 452], // Actúan como generadores (bases) para el intercambio vectorial
+    // Parámetros criptográficos del Vectorial Diffie-Hellman (RFC 3526 Group 14 - 2048 bits)
+    modulo: 323170060713110073003389139264238282488179412411402391128420097514007417066343542226196894173635693471179017379097041917546058732091950288537589861856221532121754125149017745202702357960782362488842461894775876411059286460994117232454266225221932305409190376805242355191256797158701170010580558776510388618472802579760549035697325615261670813393617995413364765591603683178967290731783845896822632202455852206771142568603095697369324864197994462102148782061291147513360098939626359300588523315758066270566418854721495034612808798938928421880942428581694665422784566373756281728103358045615579976378518903588931103756919n,
+    matrizPublica: [2n, 3n, 5n, 7n],
 
     // --- PILAR 1: Intercambio Vectorial Exponencial (Protección contra División) ---
     calcularVectorPublico: function(vectorSecreto) {
         let vectorY = [];
         let miVectorSecreto = vectorSecreto;
         if (typeof vectorSecreto === 'string') {
-            miVectorSecreto = vectorSecreto.split(',').map(Number);
+            miVectorSecreto = vectorSecreto.split(',').map(BigInt);
         }
         for(let i=0; i<this.matrizPublica.length; i++) {
             // Y_i = g_i ^ s_i (mod q)
             let y = modExp(this.matrizPublica[i], miVectorSecreto[i], this.modulo);
-            vectorY.push(y);
+            vectorY.push(y.toString());
         }
         return vectorY;
     },
 
     generarIdentidadAleatoria: function() {
         let vectorPrivado = [];
+        // Mezclar entropía manual (ratón/teclado) con tiempo
+        let semillaBase = (window.manualEntropyPool || "") + Date.now().toString() + Math.random().toString();
+        
         for(let i=0; i<this.matrizPublica.length; i++) {
-            // Exponentes aleatorios grandes
-            vectorPrivado.push(Math.floor(Math.random() * 500000) + 100000);
+            // Generar exponente de 256 bits usando entropía fuerte
+            let hashHex = sha256(semillaBase + "exponente" + i);
+            let bigIntHex = "0x" + hashHex;
+            vectorPrivado.push(BigInt(bigIntHex).toString());
+            semillaBase = hashHex; // Avanzar estado
         }
         let vectorPublico = this.calcularVectorPublico(vectorPrivado);
         
@@ -162,23 +173,27 @@ const MiCifrado = {
     },
 
     derivarLlaveCompartida: function(miPrivadaStr, publicaContactoStr) {
-        let miVectorSecreto = miPrivadaStr.split(',').map(Number);
-        let vectorPublicoContacto = publicaContactoStr.split(',').map(Number);
+        let miVectorSecreto = miPrivadaStr.split(',').map(BigInt);
+        let vectorPublicoContacto = publicaContactoStr.split(',').map(BigInt);
         
-        let sharedKey = 1;
+        let sharedKey = 1n;
         for(let i=0; i<this.matrizPublica.length; i++) {
-            // term_i = (Y_B_i) ^ s_A_i (mod q) = g_i ^ (s_A_i * s_B_i) (mod q)
+            // term_i = (Y_B_i) ^ s_A_i (mod q)
             let term = modExp(vectorPublicoContacto[i], miVectorSecreto[i], this.modulo);
             sharedKey = (sharedKey * term) % this.modulo;
         }
-        return sharedKey;
+        return sharedKey.toString();
     },
 
-    // --- PILAR 2: Derivación de Candado (KDF Robusta) ---
+    // --- PILAR 2: Derivación de Candado (KDF Robusta - PBKDF2 Manual) ---
     derivarLlaveCandado: function(nombre, password) {
-        // Deriva un hash de 256 bits (64 caracteres hex) usando SHA-256
-        let input = nombre.trim().toLowerCase() + "||" + password.trim();
-        return sha256(input);
+        // Deriva un hash de 256 bits mediante múltiples iteraciones
+        let state = nombre.trim().toLowerCase() + "||" + password.trim();
+        // 5000 iteraciones mitiga efectivamente fuerza bruta en JS de cliente
+        for (let i = 0; i < 5000; i++) {
+            state = sha256(state);
+        }
+        return state;
     },
 
     // --- CIFRADO DE BÓVEDA (Keystream basado en SHA-256 contra ataques de fuerza bruta) ---
@@ -218,10 +233,10 @@ const MiCifrado = {
         }
         
         let privStr = this.bytesToString(bytesDescifrados);
-        let privVector = privStr.split(',').map(Number);
+        let privVector = privStr.split(',');
         
         // Validación de consistencia criptográfica
-        if(privVector.length !== this.matrizPublica.length || isNaN(privVector[0])) {
+        if(privVector.length !== this.matrizPublica.length || !privVector[0]) {
             return { publica: "error_de_descifrado" };
         }
         
@@ -256,79 +271,87 @@ const MiCifrado = {
         let texto = partes.slice(0, -1).join("||");
         let timestamp = partes[partes.length - 1];
         
-        let tiempoMsj = new Date(timestamp).getTime();
-        let tiempoActual = new Date().getTime();
-        let diferenciaMinutos = (tiempoActual - tiempoMsj) / 1000 / 60;
-        
-        // Ventana de tiempo estricta para mitigar ataques de replay
-        if (diferenciaMinutos > 5 || diferenciaMinutos < -5) {
-            return { valido: false, error: "Ataque de repetición detectado (Timestamp inválido)" };
-        }
-        
+        // El Nonce y HMAC nos protegen de manipulaciones.
+        // Removida la validación estricta de 60 segundos para permitir cargar el historial antiguo.
         return { valido: true, texto: texto, timestamp: timestamp };
     },
 
-    // --- PILAR 4: El Trinquete del Caos (Mapa Logístico Mejorado) ---
-    generarCaos: function(llaveRaiz, cantidadBytes) {
-        // Usar SHA-256 de la llave raíz para evitar colisiones en la semilla del caos
-        let seedHash = sha256(llaveRaiz.toString());
-        let semilla = 0.5;
-        for (let i = 0; i < 8; i++) {
-            semilla += parseInt(seedHash.substr(i*8, 8), 16) / 0xFFFFFFFF;
-        }
-        semilla = (semilla / 9) % 1.0;
-        if (semilla < 0.1 || semilla > 0.9) semilla = 0.54321;
+    // --- PILAR 4: SHA-Stream (Reemplazo del Mapa Caótico Inseguro) ---
+    generarFlujoSHA: function(llaveRaiz, cantidadBytes) {
+        let rootHash = sha256(llaveRaiz.toString());
+        let flujo = [];
+        let blockCount = Math.ceil(cantidadBytes / 32);
         
-        let x = semilla;
-        let caosArray = [];
-        
-        for(let i=0; i<cantidadBytes; i++) {
-            x = 3.9999 * x * (1 - x);
-            let byteCaotico = Math.floor(x * 256) % 256;
-            caosArray.push(byteCaotico);
+        for (let i = 0; i < blockCount; i++) {
+            let blockHash = sha256(rootHash + "||bloque_" + i);
+            for (let j = 0; j < 32; j++) {
+                if (flujo.length < cantidadBytes) {
+                    flujo.push(parseInt(blockHash.substr(j * 2, 2), 16));
+                }
+            }
         }
-        return caosArray;
+        return flujo;
     },
 
-    // --- PILAR 5: Colisión, Blindaje y Envío ---
+    // --- PILAR 5: Colisión, Blindaje y Autenticación HMAC ---
     cifrarFinal: function(texto, llaveRaiz, onLog) {
         let bytesPayload = this.ensamblarPayload(texto);
-        if(onLog) onLog("1. Ensamblaje (Pilar 3)", `Texto + TS => ${bytesPayload.length} bytes`);
+        if(onLog) onLog("1. Ensamblaje", `Payload => ${bytesPayload.length} bytes`);
         
-        let bytesCaos = this.generarCaos(llaveRaiz, bytesPayload.length);
-        if(onLog) onLog("2. Mapa Logístico (Pilar 4)", `Generados ${bytesCaos.length} bytes de caos`);
+        // Generar Nonce aleatorio de 8 bytes para hacer el flujo único
+        let nonce = [];
+        for (let i = 0; i < 8; i++) {
+            nonce.push(Math.floor(Math.random() * 256));
+        }
+        let nonceHex = nonce.map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        let flujoKey = llaveRaiz.toString() + "||" + nonceHex;
+        let bytesFlujo = this.generarFlujoSHA(flujoKey, bytesPayload.length);
+        if(onLog) onLog("2. SHA-Stream + Nonce", `Flujo único generado`);
         
         let bytesCifrados = [];
         for(let i=0; i<bytesPayload.length; i++) {
-            bytesCifrados.push(bytesPayload[i] ^ bytesCaos[i]);
+            bytesCifrados.push(bytesPayload[i] ^ bytesFlujo[i]);
         }
-        if(onLog) onLog("3. Colisión XOR (Pilar 5)", `Array resultante: [${bytesCifrados.slice(0,5).join(',')}...]`);
         
-        let b64 = this.bytesToBase64(bytesCifrados);
-        if(onLog) onLog("4. Blindaje Base64", b64);
+        // HMAC Manual sobre Nonce + Cifrado
+        let hexCifrado = bytesCifrados.map(b => b.toString(16).padStart(2, '0')).join('');
+        let mac = sha256(llaveRaiz.toString() + "||HMAC||" + nonceHex + hexCifrado);
+        let macBytes = [];
+        for(let i=0; i<32; i++) macBytes.push(parseInt(mac.substr(i*2, 2), 16));
         
-        return b64;
+        // Paquete Final: [Nonce (8)] + [Ciphertext] + [HMAC (32)]
+        let paqueteFinal = nonce.concat(bytesCifrados).concat(macBytes);
+        
+        return this.bytesToBase64(paqueteFinal);
     },
 
     descifrarFinal: function(cadenaB64, llaveRaiz, onLog) {
-        if(onLog) onLog("1. Recibido Base64", cadenaB64);
+        let bytesPaquete = this.base64ToBytes(cadenaB64);
+        if (bytesPaquete.length < 40) return { valido: false, error: "Paquete muy corto (Falta MAC o Nonce)" };
         
-        let bytesCifrados = this.base64ToBytes(cadenaB64);
-        if(onLog) onLog("2. Desempaquetado a Bytes", `Recuperados ${bytesCifrados.length} bytes`);
+        let nonce = bytesPaquete.slice(0, 8);
+        let nonceHex = nonce.map(b => b.toString(16).padStart(2, '0')).join('');
         
-        let bytesCaos = this.generarCaos(llaveRaiz, bytesCifrados.length);
-        if(onLog) onLog("3. Trinquete Sincronizado", `Caos de llave raíz: [${bytesCaos.slice(0,5).join(',')}...]`);
+        let bytesCifrados = bytesPaquete.slice(8, bytesPaquete.length - 32);
+        let macRecibido = bytesPaquete.slice(bytesPaquete.length - 32).map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        let hexCifrado = bytesCifrados.map(b => b.toString(16).padStart(2, '0')).join('');
+        let macEsperado = sha256(llaveRaiz.toString() + "||HMAC||" + nonceHex + hexCifrado);
+        
+        if (macRecibido !== macEsperado) {
+            return { valido: false, error: "Fallo de Integridad (HMAC incorrecto/Paquete alterado)" };
+        }
+        
+        let flujoKey = llaveRaiz.toString() + "||" + nonceHex;
+        let bytesFlujo = this.generarFlujoSHA(flujoKey, bytesCifrados.length);
         
         let bytesDescifrados = [];
         for(let i=0; i<bytesCifrados.length; i++) {
-            bytesDescifrados.push(bytesCifrados[i] ^ bytesCaos[i]);
+            bytesDescifrados.push(bytesCifrados[i] ^ bytesFlujo[i]);
         }
-        if(onLog) onLog("4. Decisión XOR Inversa", `Bytes limpios: [${bytesDescifrados.slice(0,5).join(',')}...]`);
         
-        let resultado = this.desensamblarPayload(bytesDescifrados);
-        if(onLog) onLog("5. Trazabilidad Temporal", resultado.valido ? "Timestamp OK" : "ERROR: " + resultado.error);
-        
-        return resultado;
+        return this.desensamblarPayload(bytesDescifrados);
     },
 
     // FIRMA DIGITAL CUSTOM (Para flujo Challenge-Response de Login)

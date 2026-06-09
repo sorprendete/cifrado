@@ -12,6 +12,19 @@ const viewRegister = document.getElementById('view-register');
 const linkToRegister = document.getElementById('link-to-register');
 const linkToLogin = document.getElementById('link-to-login');
 
+// Recolector de entropía manual (Movimientos y teclado) para reemplazar Math.random()
+window.manualEntropyPool = '';
+window.addEventListener('mousemove', (e) => {
+    if (window.manualEntropyPool.length < 1000) {
+        window.manualEntropyPool += e.clientX + '-' + e.clientY + '|';
+    }
+});
+window.addEventListener('keydown', (e) => {
+    if (window.manualEntropyPool.length < 1000) {
+        window.manualEntropyPool += e.key + '|';
+    }
+});
+
 const btnLogin = document.getElementById('btn-login');
 const loginUsername = document.getElementById('login-username');
 const loginPassword = document.getElementById('login-password');
@@ -134,7 +147,13 @@ btnRegister.addEventListener('click', async () => {
             currentUser.id = result.id;
             currentUser.alias_publico = alias;
             currentUser.token_sesion = result.token_sesion;
-            localStorage.setItem('e2ee_identity', JSON.stringify(currentUser));
+            
+            // Protección: Guardar llave privada solo en memoria de sesión (RAM)
+            sessionStorage.setItem('e2ee_priv', llavesIdentidad.privada);
+            const forStorage = { ...currentUser };
+            delete forStorage.llaves.privada;
+            
+            localStorage.setItem('e2ee_identity', JSON.stringify(forStorage));
             window.location.href = 'chat.html';
         } else {
             showToast('Error: ' + result.error, 'error');
@@ -191,12 +210,13 @@ btnLogin.addEventListener('click', async () => {
         btnLogin.innerText = "Resolviendo prueba ZK...";
         
         // Paso 3: Calcular la prueba de conocimiento cero usando el primer exponente del vector privado
-        const s_vector = llavesDesempaquetadas.privada.split(',').map(Number);
-        const s_0 = s_vector[0];
-        const modulo = 9999991;
+        const s_vector = llavesDesempaquetadas.privada.split(',');
+        const s_0 = BigInt(s_vector[0]);
+        const modulo = MiCifrado.modulo;
+        const desafio = BigInt(challengeResult.desafio);
         
         // S = T^s_0 (mod modulo)
-        const S = modExp(challengeResult.desafio, s_0, modulo);
+        const S = modExp(desafio, s_0, modulo);
         // prueba = sha256(S)
         const prueba = sha256(S.toString());
         
@@ -221,7 +241,12 @@ btnLogin.addEventListener('click', async () => {
             currentUser.llaves = llavesDesempaquetadas;
             currentUser.token_sesion = loginResult.token_sesion;
             
-            localStorage.setItem('e2ee_identity', JSON.stringify(currentUser));
+            // Protección: Guardar llave privada solo en memoria de sesión (RAM)
+            sessionStorage.setItem('e2ee_priv', llavesDesempaquetadas.privada);
+            const forStorage = { ...currentUser };
+            delete forStorage.llaves.privada;
+            
+            localStorage.setItem('e2ee_identity', JSON.stringify(forStorage));
             window.location.href = 'chat.html';
         } else {
             showToast('Acceso Denegado: ' + loginResult.error, 'error');

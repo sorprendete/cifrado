@@ -3,6 +3,15 @@ require 'db.php';
 header('Content-Type: application/json');
 
 $usuario_id = $_GET['usuario_id'] ?? null;
+$token_sesion = $_GET['token_sesion'] ?? null;
+
+if (!$usuario_id || !$token_sesion) {
+    echo json_encode(['error' => 'Faltan credenciales']);
+    exit;
+}
+
+// Validar que la sesión sea válida
+validar_sesion($usuario_id, $token_sesion, $pdo);
 
 try {
     if ($usuario_id) {
@@ -12,14 +21,14 @@ try {
         $activos = $stmt_act->fetchAll();
         $activos_ids = array_column($activos, 'id');
         
-        // Obtener mensajes donde el usuario es el destinatario (para buscar remitentes de cuentas que quizás se eliminaron)
+        // Obtener mensajes donde el usuario es el destinatario
         $stmt_msg = $pdo->prepare("SELECT de_usuario_id FROM mensajes WHERE para_usuario_id = ?");
-        $stmt_msg->execute([ofuscar_id($usuario_id)]);
+        $stmt_msg->execute([$usuario_id]);
         $mensajes_recibidos = $stmt_msg->fetchAll();
         
         $chat_ids = [];
         foreach ($mensajes_recibidos as $msg) {
-            $sender = desofuscar_id_dinamico($msg['de_usuario_id']);
+            $sender = (int)$msg['de_usuario_id'];
             if ($sender > 0 && !in_array($sender, $activos_ids)) {
                 $chat_ids[] = $sender;
             }

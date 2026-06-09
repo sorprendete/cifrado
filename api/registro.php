@@ -2,6 +2,13 @@
 require 'db.php';
 header('Content-Type: application/json');
 
+// Bloquear registros abusivos: Máximo 5 registros por hora por IP
+if (!check_rate_limit($pdo, 'registro', 5, 3600)) {
+    http_response_code(429);
+    echo json_encode(['error' => 'Demasiados registros desde esta IP. Intenta más tarde.']);
+    exit;
+}
+
 $data = json_decode(file_get_contents('php://input'), true);
 
 if (!isset($data['nombre']) || !isset($data['llave_publica']) || !isset($data['boveda_cifrada']) || !isset($data['alias_publico'])) {
@@ -37,8 +44,9 @@ try {
     $dispositivo = isset($_SERVER['HTTP_USER_AGENT']) ? substr($_SERVER['HTTP_USER_AGENT'], 0, 250) : 'Desconocido';
     $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
 
+    $ip_hash = hash('sha256', $ip);
     $stmt_sesion = $pdo->prepare("INSERT INTO sesiones (usuario_id, token_sesion, dispositivo, ip) VALUES (?, ?, ?, ?)");
-    $stmt_sesion->execute([$nuevo_id, $token_sesion, $dispositivo, $ip]);
+    $stmt_sesion->execute([$nuevo_id, $token_sesion, $dispositivo, $ip_hash]);
 
     $pdo->commit();
     echo json_encode(['success' => true, 'id' => $nuevo_id, 'rol' => $rol, 'token_sesion' => $token_sesion]);

@@ -31,8 +31,8 @@ try {
     }
     
     // Validar que el usuario que intenta borrar sea el emisor o el receptor
-    $de_dec = desofuscar_id_dinamico($msg['de_usuario_id']);
-    $para_dec = desofuscar_id($msg['para_usuario_id']);
+    $de_dec = (int)$msg['de_usuario_id'];
+    $para_dec = (int)$msg['para_usuario_id'];
     if ($de_dec != $usuario_id && $para_dec != $usuario_id) {
         echo json_encode(['error' => 'No autorizado para borrar este mensaje']);
         exit;

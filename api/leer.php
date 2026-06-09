@@ -19,7 +19,7 @@ try {
         FROM mensajes 
         WHERE para_usuario_id = ? AND entregado = 0
     ");
-    $stmt->execute([ofuscar_id($usuario_id)]);
+    $stmt->execute([$usuario_id]);
     $mensajes = $stmt->fetchAll();
 
     if (count($mensajes) > 0) {
@@ -29,9 +29,7 @@ try {
         $updateStmt->execute($ids);
     }
 
-    foreach ($mensajes as &$msg) {
-        $msg['de_usuario_id'] = desofuscar_id_dinamico($msg['de_usuario_id']);
-    }
+    // No es necesario desofuscar, la DB almacena los IDs reales.
 
     echo json_encode(['success' => true, 'mensajes' => $mensajes]);
 } catch (PDOException $e) {

@@ -29,12 +29,16 @@ CREATE TABLE IF NOT EXISTS `usuarios` (
 -- 2. Estructura para tabla mensajes
 CREATE TABLE IF NOT EXISTS `mensajes` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `de_usuario_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `para_usuario_id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `payload_cifrado` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `de_usuario_id` int NOT NULL,
+  `para_usuario_id` int NOT NULL,
+  `payload_cifrado` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `entregado` tinyint(1) DEFAULT '0',
   `creado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `de_usuario_id` (`de_usuario_id`),
+  KEY `para_usuario_id` (`para_usuario_id`),
+  CONSTRAINT `mensajes_ibfk_1` FOREIGN KEY (`de_usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `mensajes_ibfk_2` FOREIGN KEY (`para_usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 3. Estructura para tabla sesiones (Depende de usuarios)
@@ -43,7 +47,7 @@ CREATE TABLE IF NOT EXISTS `sesiones` (
   `usuario_id` int NOT NULL,
   `token_sesion` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `dispositivo` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT 'Desconocido',
-  `ip` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT '0.0.0.0',
+  `ip` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT '0.0.0.0',
   `creado_en` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `ultimo_acceso` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

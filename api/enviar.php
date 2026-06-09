@@ -15,12 +15,16 @@ $para = (int)$data['para_usuario_id'];
 $payload = trim($data['payload_cifrado']);
 $token_sesion = $data['token_sesion'] ?? null;
 
-validar_sesion($de, $token_sesion, $pdo);
+if (strlen($payload) > 60000) {
+    echo json_encode(['error' => 'El mensaje cifrado es demasiado grande. Límite excedido.']);
+    exit;
+}
 
+validar_sesion($de, $token_sesion, $pdo);
 
 try {
     $stmt = $pdo->prepare("INSERT INTO mensajes (de_usuario_id, para_usuario_id, payload_cifrado) VALUES (?, ?, ?)");
-    $stmt->execute([ofuscar_id_dinamico($de), ofuscar_id($para), $payload]);
+    $stmt->execute([$de, $para, $payload]);
     
     $nuevo_id = $pdo->lastInsertId();
     echo json_encode(['success' => true, 'id' => $nuevo_id]);

@@ -20,20 +20,38 @@ let userPollingInterval = null;
 let messagesCache = new Set();
 let unreadCounts = {}; 
 
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.replace(/[&<>'"]/g, 
+        tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag] || tag)
+    );
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     const savedIdentity = localStorage.getItem('e2ee_identity');
     if (!savedIdentity) {
         window.location.href = 'index.html';
         return;
     }
+    const identity = JSON.parse(savedIdentity);
+    const privada = sessionStorage.getItem('e2ee_priv');
     
-    currentUser = JSON.parse(savedIdentity);
-    if (!currentUser.token_sesion) {
-        // Force re-login if token is missing
+    if (!privada) {
+        // La memoria RAM (sessionStorage) se borró, requiere desbloquear bóveda de nuevo
         localStorage.removeItem('e2ee_identity');
         window.location.href = 'index.html';
         return;
     }
+    
+    identity.llaves = identity.llaves || {};
+    identity.llaves.privada = privada;
+    currentUser = identity;
 
     document.getElementById('my-alias').innerText = currentUser.alias_publico || currentUser.nombre;
     document.getElementById('my-public-key').innerText = `ID: ${currentUser.llaves.publica.substring(0,16)}...`;
@@ -78,7 +96,7 @@ let editMessageId = null;
 
 // --- Funciones UI Base ---
 function cargarUsuarios() {
-    fetch('api/usuarios.php?usuario_id=' + currentUser.id)
+    fetch(`api/usuarios.php?usuario_id=${currentUser.id}&token_sesion=${currentUser.token_sesion}`)
         .then(res => res.json())
         .then(result => {
             if (result.success) {
@@ -93,8 +111,8 @@ function cargarUsuarios() {
                     const badge = unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : '';
                     
                     div.innerHTML = `
-                        <strong>${user.alias_publico}</strong><br>
-                        <small style="color:var(--text-secondary)">ID: ${user.llave_publica.substring(0,16)}...</small>
+                        <strong>${escapeHTML(user.alias_publico)}</strong><br>
+                        <small style="color:var(--text-secondary)">ID: ${escapeHTML(user.llave_publica.substring(0,16))}...</small>
                         ${badge}
                     `;
                     div.addEventListener('click', () => {
@@ -142,7 +160,7 @@ function abrirChat(user) {
             <div style="display: flex; align-items: center; gap: 10px;">
                 <button id="btn-back-mobile" class="btn-secondary" style="padding: 5px 10px; border: none; border-radius: 8px; background: transparent;"><svg class="ui-icon-svg" style="width:20px;height:20px;" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
                 <div>
-                    <h3>${user.alias_publico}</h3>
+                    <h3>${escapeHTML(user.alias_publico)}</h3>
                     <span class="status-badge status-secure"><svg class="ui-icon-svg" style="width:14px;height:14px;" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Conexión E2EE Establecida</span>
                 </div>
             </div>
@@ -263,13 +281,30 @@ function mostrarMensajeUI(text, timestamp, type, msgId, isEphemeral = false, eph
         `;
     }
 
-    let innerContent = DOMPurify.sanitize(text);
+    let innerContent = '';
+    let nodeToAppend = null;
+    
     if (text.startsWith('__IMG__')) {
         const base64 = text.substring(7);
-        innerContent = `<img src="${DOMPurify.sanitize(base64)}" class="chat-image">`;
+        if (base64.startsWith('data:image/')) {
+            nodeToAppend = document.createElement('img');
+            nodeToAppend.src = base64;
+            nodeToAppend.className = 'chat-image';
+        } else {
+            innerContent = '[Imagen bloqueada por seguridad]';
+        }
     } else if (text.startsWith('__AUDIO__')) {
         const base64 = text.substring(9);
-        innerContent = `<audio controls src="${DOMPurify.sanitize(base64)}" class="chat-audio"></audio>`;
+        if (base64.startsWith('data:audio/')) {
+            nodeToAppend = document.createElement('audio');
+            nodeToAppend.src = base64;
+            nodeToAppend.controls = true;
+            nodeToAppend.className = 'chat-audio';
+        } else {
+            innerContent = '[Audio bloqueado por seguridad]';
+        }
+    } else {
+        innerContent = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(text) : escapeHTML(text);
     }
 
     let timerHtml = '';
@@ -277,11 +312,28 @@ function mostrarMensajeUI(text, timestamp, type, msgId, isEphemeral = false, eph
         timerHtml = ` <span class="ephemeral-timer" style="color: var(--danger-color); font-size: 0.75rem; margin-left: 8px; font-weight: bold;">[ ${ephemeralDuration}S ]</span>`;
     }
 
+    let avatarHtml = '';
+    if (type === 'them' && currentContact) {
+        let inicial = (currentContact.alias_publico || currentContact.nombre).charAt(0).toUpperCase();
+        avatarHtml = `<div class="avatar-circle">${inicial}</div>`;
+        div.classList.add('has-avatar');
+    }
+
     div.innerHTML = `
-        ${actionsHtml}
-        <div class="text">${innerContent}</div>
-        <div class="time">${time}${timerHtml}</div>
+        ${avatarHtml}
+        <div class="message-content">
+            ${actionsHtml}
+            <div class="text"></div>
+            <div class="time">${time}${timerHtml}</div>
+        </div>
     `;
+    
+    const textDiv = div.querySelector('.text');
+    if (nodeToAppend) {
+        textDiv.appendChild(nodeToAppend);
+    } else {
+        textDiv.innerHTML = innerContent;
+    }
 
     if (isEphemeral && msgId) {
         let timeLeft = ephemeralDuration;
@@ -399,14 +451,7 @@ function iniciarBloqueVisualizador(titulo, tipo) {
 }
 
 function agregarPasoVisualizador(block, etiqueta, datos) {
-    if (!vizContent) return;
-    const step = document.createElement('div');
-    step.className = 'viz-step';
-    step.innerHTML = `
-        <span class="viz-label">${etiqueta}:</span>
-        <div class="viz-data">${DOMPurify.sanitize(datos)}</div>
-    `;
-    block.appendChild(step);
+    // Retirado para UI limpia de Messenger
 }
 
 // --- MENSAJERIA CORE ---

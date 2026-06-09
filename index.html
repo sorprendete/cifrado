@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bóveda E2EE - Acceso Criptográfico</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/crypto-theme.css">
+</head>
+<body class="crypto-theme">
+
+    <div id="login-modal" class="modal-overlay" style="position: relative; background: transparent;">
+        <!-- Se han eliminado los glow-orbs antiguos en favor del background de malla en body -->
+        
+        <div class="modal">
+            <div class="modal-header">
+                <!-- SVG Lock replacing emoji -->
+                <svg class="crypto-icon-svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    <circle cx="12" cy="16" r="1"></circle>
+                </svg>
+                <h2 id="modal-title" onmouseover="scrambleText(this, 'BÓVEDA E2EE')" data-original="BÓVEDA E2EE">Bóveda E2EE</h2>
+                <p>Identidad Criptográfica de Conocimiento Cero</p>
+            </div>
+            
+            <div class="modal-body" id="view-login">
+                <div class="input-group">
+                    <label for="login-username">Usuario Secreto</label>
+                    <input type="text" id="login-username" placeholder="[ ingresa_usuario ]" autocomplete="off">
+                </div>
+                
+                <div class="input-group">
+                    <label for="login-password">Contraseña Secreta</label>
+                    <div style="position: relative;">
+                        <input type="password" id="login-password" placeholder="[ llave_maestra ]" style="width: 100%; padding-right: 40px;">
+                        <svg onclick="togglePasswordSVG('login-password', this)" class="toggle-pwd-icon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="btn-login" class="btn-primary" style="width: 100%;" onmouseover="scrambleText(this, 'AUTENTICAR')">AUTENTICAR</button>
+                </div>
+                <div style="text-align: center; margin-top: 15px;">
+                    <a href="#" id="link-to-register" class="tech-link" style="text-decoration: none; font-size: 0.8rem;">[ ¿No tienes bóveda? Crear Nodo ]</a>
+                </div>
+            </div>
+
+            <div class="modal-body hidden" id="view-register">
+                <div class="input-group">
+                    <label for="reg-alias">Alias Público (Público)</label>
+                    <input type="text" id="reg-alias" placeholder="[ ej: Node_01 ]" autocomplete="off">
+                </div>
+
+                <div class="input-group">
+                    <label for="reg-username">Usuario Secreto (Privado)</label>
+                    <input type="text" id="reg-username" placeholder="[ ej: sys_admin ]" autocomplete="off">
+                    <span id="username-error" style="color: #ff4444; font-size: 0.75rem; margin-top: 5px; display: none; font-family: 'Space Mono', monospace;"></span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="reg-password">Llave Maestra</label>
+                    <div style="position: relative;">
+                        <input type="password" id="reg-password" placeholder="[ genera_llave ]" style="width: 100%; padding-right: 40px;">
+                        <svg onclick="togglePasswordSVG('reg-password', this)" class="toggle-pwd-icon" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="btn-register" class="btn-secondary" style="width: 100%;" onmouseover="scrambleText(this, 'INICIALIZAR_BOVEDA')">INICIALIZAR_BOVEDA</button>
+                </div>
+                <div style="text-align: center; margin-top: 15px;">
+                    <a href="#" id="link-to-login" class="tech-link" style="text-decoration: none; font-size: 0.8rem;">[ Ya tengo un nodo. Conectar ]</a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                Algoritmo manual de 5 Pilares. Todo ocurre localmente.
+            </div>
+        </div>
+    </div>
+
+    <script src="js/crypto.js?v=1.1"></script>
+    <script src="js/login.js?v=1.1"></script>
+    <script>
+        function togglePasswordSVG(inputId, svgElement) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                svgElement.classList.add('active');
+            } else {
+                input.type = 'password';
+                svgElement.classList.remove('active');
+            }
+        }
+
+        // Acceso oculto a la documentación con 5 clics en el candado
+        let lockClicks = 0;
+        document.querySelector('.crypto-icon-svg').addEventListener('click', () => {
+            lockClicks++;
+            if (lockClicks >= 5) {
+                window.open('docs.html', '_blank');
+                lockClicks = 0;
+            }
+        });
+
+        // Efecto Scramble para textos
+        const chars = '!<>-_\\\\/[]{}—=+*^?#_';
+        function scrambleText(element, finalString) {
+            let iteration = 0;
+            clearInterval(element.scrambleInterval);
+            element.scrambleInterval = setInterval(() => {
+                element.innerText = finalString
+                    .split('')
+                    .map((letter, index) => {
+                        if(index < iteration) return finalString[index];
+                        return chars[Math.floor(Math.random() * chars.length)];
+                    })
+                    .join('');
+                if(iteration >= finalString.length){ 
+                    clearInterval(element.scrambleInterval);
+                }
+                iteration += 1 / 3;
+            }, 30);
+        }
+    </script>
+</body>
+</html>

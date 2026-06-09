@@ -1,0 +1,57 @@
+/* Message Actions */
+.message {
+    position: relative;
+}
+
+.message-actions {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: none;
+    gap: 4px;
+    background: rgba(0,0,0,0.5);
+    padding: 4px;
+    border-radius: 8px;
+    backdrop-filter: blur(5px);
+}
+
+.message.me .message-actions {
+    left: -70px;
+}
+
+.message.me:hover .message-actions {
+    display: flex;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.message.deleted .text {
+    font-style: italic;
+    color: var(--text-secondary);
+}
+
+.edit-tag {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-left: 4px;
+}
+
+.editing-mode {
+    border-color: var(--warning-color) !important;
+    box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2) !important;
+}

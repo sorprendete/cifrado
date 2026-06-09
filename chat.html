@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bóveda E2EE - Chat</title>
+    <link rel="stylesheet" href="assets/style.css">
+    <link rel="stylesheet" href="css/crypto-theme.css">
+</head>
+<body class="crypto-theme">
+
+    <!-- Contenedor Principal -->
+    <div class="container" id="app-container">
+        <!-- Barra Lateral -->
+        <div class="sidebar">
+            <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h3 id="my-alias" style="margin-bottom: 4px; font-size: 1.1rem; color: var(--crypto-accent); font-family: var(--font-mono); text-transform: uppercase;">Usuario</h3>
+                    <div id="my-public-key" style="font-family: monospace; font-size: 0.75rem; color: var(--crypto-muted); background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; display: inline-block; border: 1px solid rgba(255,255,255,0.05);">ID: ...</div>
+                </div>
+            </div>
+            
+            <!-- Modal de Perfil -->
+            <div id="profile-modal" class="modal-overlay hidden">
+                <div class="modal" style="width: 90%; max-width: 350px; padding: 24px;">
+                    <h3 style="color:var(--crypto-text); margin-bottom: 20px; font-family: var(--font-mono); text-transform: uppercase; font-size: 1.1rem; letter-spacing: 1px;">Ajustes de Bóveda</h3>
+                    
+                    <div class="input-group">
+                        <label>Nuevo Alias Público</label>
+                        <input type="text" id="profile-alias" placeholder="Tu alias visible">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Contraseña Actual</label>
+                        <div style="position: relative;">
+                            <input type="password" id="profile-old-pass" placeholder="Para validar identidad" style="width: 100%; padding-right: 40px;">
+                            <svg class="toggle-pwd-icon" onclick="togglePassword('profile-old-pass', this)" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Nueva Contraseña</label>
+                        <div style="position: relative;">
+                            <input type="password" id="profile-new-pass" placeholder="Nueva contraseña secreta" style="width: 100%; padding-right: 40px;">
+                            <svg class="toggle-pwd-icon" onclick="togglePassword('profile-new-pass', this)" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; gap: 10px;">
+                        <button id="btn-save-profile" class="btn-primary" style="flex:1;">Guardar</button>
+                        <button id="btn-close-profile" class="btn-secondary" style="flex:1;">Cerrar</button>
+                    </div>
+                    
+                    <hr style="border: 0; border-top: 1px dashed var(--crypto-border); margin: 20px 0;">
+
+                    <h4 style="color:var(--crypto-text); margin-bottom: 10px; font-family: var(--font-mono); font-size: 0.85rem;">Dispositivos Vinculados</h4>
+                    <div id="sessions-list" style="max-height: 150px; overflow-y: auto; margin-bottom: 15px; font-size: 0.8rem; font-family: var(--font-mono);">
+                        <p style="color:var(--crypto-muted);">Cargando sesiones...</p>
+                    </div>
+                    
+                    <hr style="border: 0; border-top: 1px dashed var(--crypto-border); margin: 20px 0;">
+                    
+                    <button id="btn-logout-current" class="btn-secondary" style="width: 100%; margin-bottom: 10px; text-align: center;">
+                        CERRAR SESIÓN
+                    </button>
+                    
+                    <button id="btn-delete-account" class="btn-secondary" style="width: 100%; color: var(--danger-color); border-color: rgba(248,81,73,0.3) !important; text-align: center;">
+                        ELIMINAR BÓVEDA
+                    </button>
+                </div>
+            </div>
+            <div class="user-list" id="user-list">
+                <!-- Usuarios cargados por JS -->
+            </div>
+            
+            <div style="padding: 15px; border-top: 1px dashed var(--crypto-border); background: rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-profile" class="btn-secondary" style="flex: 1; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <svg class="ui-icon-svg" style="width:16px;height:16px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        PERFIL
+                    </button>
+                    <button onclick="localStorage.removeItem('e2ee_identity'); window.location.href='index.html'" class="btn-secondary" style="flex: 1; color: var(--danger-color); border-color: rgba(248,81,73,0.3) !important; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <svg class="ui-icon-svg" style="width:16px;height:16px;" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        SALIR
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de Chat -->
+        <div class="chat-area">
+            <div class="chat-header" id="chat-header">
+                <div class="contact-info">
+                    <h3 id="current-contact-name">BÓVEDA PRINCIPAL</h3>
+                    <div class="security-status hidden" id="security-status">Conexión E2EE Establecida</div>
+                </div>
+                <div class="contact-fingerprint hidden" id="contact-fingerprint" style="font-family: monospace; font-size: 0.8rem; color: var(--crypto-accent); background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                    <!-- Huella del contacto -->
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <div class="empty-state-chat">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <p>Esperando conexión de nodo.<br>Selecciona un contacto en la red.</p>
+                </div>
+            </div>
+
+            <div style="position: relative; width: 100%; display: flex; flex-direction: column;">
+                
+                <!-- Contenedor de Emojis -->
+                <div id="emoji-picker" class="hidden" style="position: absolute; bottom: 70px; left: 10px; background: rgba(10, 10, 10, 0.95); border: 1px solid var(--crypto-border); border-radius: 8px; padding: 10px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; max-height: 200px; overflow-y: auto; backdrop-filter: blur(10px); z-index: 100;">
+                    <!-- Emojis se llenan por JS -->
+                </div>
+
+                <!-- Contenedor de Pre-visualización Multimedia -->
+                <div id="media-preview-container" class="hidden" style="position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); background: rgba(10, 10, 10, 0.95); border: 1px dashed var(--crypto-accent); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 99; max-width: 90%;">
+                    <div style="display: flex; justify-content: space-between; width: 100%;">
+                        <span style="color: var(--crypto-accent); font-family: var(--font-mono); font-size: 0.8rem; text-transform: uppercase;">Adjunto Cargado</span>
+                        <button id="btn-cancel-media" style="background: none; border: none; color: var(--danger-color); cursor: pointer; font-size: 1.2rem;">✖</button>
+                    </div>
+                    <div id="media-preview-content" style="max-height: 200px; overflow: hidden; display: flex; justify-content: center; align-items: center;">
+                    </div>
+                </div>
+
+                <div class="chat-input-area" id="chat-input-area" style="display: flex; gap: 10px; align-items: center;">
+                    <button id="btn-emoji" class="btn-secondary" style="padding: 10px; border-radius: 50%; width: 42px; height: 42px; display: flex; justify-content: center; align-items: center;" title="Emojis" disabled>
+                        <svg class="ui-icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+                    </button>
+                    <input type="file" id="file-input" accept="image/*" style="display: none;">
+                    <button id="btn-attach" class="btn-secondary" style="padding: 10px; border-radius: 50%; width: 42px; height: 42px; display: flex; justify-content: center; align-items: center;" title="Adjuntar Imagen" disabled>
+                        <svg class="ui-icon-svg" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                    </button>
+                    
+                    <input type="text" id="message-input" placeholder="Escribe un mensaje seguro..." disabled style="flex: 1;">
+                    
+                    <button id="btn-mic" class="btn-secondary" style="padding: 10px; border-radius: 50%; width: 42px; height: 42px; display: flex; justify-content: center; align-items: center;" title="Grabar Audio" disabled>
+                        <svg class="ui-icon-svg" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                    </button>
+                    <select id="ephemeral-select" class="btn-secondary" style="padding: 8px 10px; border-radius: 4px; height: 42px; outline: none; cursor: pointer; color: var(--crypto-text);" title="Mensajes Efímeros">
+                        <option value="0" style="background:var(--crypto-panel);">[ NORMAL ]</option>
+                        <option value="30" style="background:var(--crypto-panel);">[ 30 SEC ]</option>
+                        <option value="60" style="background:var(--crypto-panel);">[ 1 MIN ]</option>
+                        <option value="300" style="background:var(--crypto-panel);">[ 5 MIN ]</option>
+                    </select>
+                    <button id="btn-send" disabled style="padding: 0 20px; height: 42px;">ENVIAR</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de Visualización (Laboratorio) -->
+        <div class="visualizer-area hidden" id="visualizer-area">
+            <div class="sidebar-header" style="padding: 15px 20px; background: rgba(0,0,0,0.6);">
+                <h2 style="font-family: var(--font-mono); font-size: 1.1rem; color: var(--crypto-accent); text-transform: uppercase; margin:0;">Lab Criptográfico</h2>
+            </div>
+            <div class="viz-content" id="viz-content" style="font-family: var(--font-mono); font-size: 0.8rem;">
+                <div class="empty-state-chat" style="height: auto; margin-top: 50px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                    <p>Monitoreo matemático<br>en tiempo real</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- DOMPurify para prevenir XSS al renderizar mensajes (permitido por ser seguridad estándar frontend, pero el cifrado es 100% custom) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/crypto.js?v=1.1"></script>
+    <script src="js/app.js?v=1.1"></script>
+    <script>
+        function togglePassword(inputId, iconElement) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                iconElement.querySelector('path').setAttribute('d', 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 9a3 3 0 0 0 0 6 3 3 0 0 0 0-6z');
+                iconElement.querySelector('circle').setAttribute('r', '0');
+                iconElement.style.stroke = 'var(--crypto-cyan)';
+            } else {
+                input.type = 'password';
+                iconElement.querySelector('path').setAttribute('d', 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z');
+                iconElement.querySelector('circle').setAttribute('r', '3');
+                iconElement.style.stroke = 'currentColor';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,761 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+:root {
+    --crypto-bg: #050505;
+    --crypto-panel: #0A0A0A;
+    --crypto-accent: #00E676; /* Emerald Green */
+    --crypto-accent-hover: #00C853;
+    --crypto-cyan: #00F0FF;
+    --crypto-border: rgba(0, 230, 118, 0.2);
+    --crypto-text: #E6EDF3;
+    --crypto-muted: #6E7681;
+    --font-mono: 'Space Mono', monospace;
+}
+
+/* Background overlay override for index.html */
+body.crypto-theme {
+    background-color: var(--crypto-bg);
+    background-image: 
+        linear-gradient(rgba(0, 230, 118, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 230, 118, 0.03) 1px, transparent 1px);
+    background-size: 30px 30px;
+    background-position: center center;
+}
+
+/* Hide old orbs */
+body.crypto-theme .glow-orb {
+    display: none !important;
+}
+
+/* Modal Redesign */
+body.crypto-theme .modal {
+    background: var(--crypto-panel);
+    border: 1px solid var(--crypto-border);
+    border-radius: 8px; /* Sharper corners */
+    box-shadow: 0 0 40px rgba(0, 230, 118, 0.05), inset 0 0 20px rgba(0, 230, 118, 0.02);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Top accent scanline */
+body.crypto-theme .modal::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--crypto-accent), transparent);
+    animation: scanline 3s linear infinite;
+}
+
+@keyframes scanline {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+body.crypto-theme .modal-header {
+    padding: 24px 24px 12px 24px;
+}
+
+body.crypto-theme .modal-header h2 {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+    color: var(--crypto-text);
+    text-shadow: 0 0 10px rgba(230, 237, 243, 0.3);
+}
+
+body.crypto-theme .modal-header p {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--crypto-accent);
+    letter-spacing: 1px;
+    opacity: 0.8;
+}
+
+/* SVGs replacing Emojis */
+body.crypto-theme .crypto-icon-svg {
+    width: 36px;
+    height: 36px;
+    stroke: var(--crypto-accent);
+    stroke-width: 1.5;
+    fill: none;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 8px rgba(0, 230, 118, 0.5));
+    cursor: pointer; /* For the 5 clicks to docs */
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+body.crypto-theme .crypto-icon-svg:active {
+    transform: scale(0.95);
+    filter: drop-shadow(0 0 15px rgba(0, 230, 118, 0.8));
+}
+
+body.crypto-theme .modal-body {
+    padding: 0 24px 20px 24px;
+}
+
+body.crypto-theme .input-group {
+    margin-bottom: 14px;
+}
+
+body.crypto-theme .input-group label {
+    font-family: var(--font-mono);
+    color: var(--crypto-muted);
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+body.crypto-theme .input-group input {
+    font-family: var(--font-mono);
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px; /* Sharper */
+    color: var(--crypto-accent);
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+body.crypto-theme .input-group input::placeholder {
+    color: rgba(255, 255, 255, 0.15);
+}
+
+body.crypto-theme .input-group input:focus {
+    border-color: var(--crypto-accent);
+    background: rgba(0, 230, 118, 0.05);
+    box-shadow: 0 0 0 1px var(--crypto-accent), inset 0 0 8px rgba(0, 230, 118, 0.1);
+    outline: none;
+}
+
+/* Toggle Password SVG */
+body.crypto-theme .toggle-pwd-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    stroke: var(--crypto-muted);
+    fill: none;
+    transition: stroke 0.2s, filter 0.2s;
+}
+
+body.crypto-theme .toggle-pwd-icon:hover {
+    stroke: var(--crypto-accent);
+    filter: drop-shadow(0 0 4px var(--crypto-accent));
+}
+
+body.crypto-theme .toggle-pwd-icon.active {
+    stroke: var(--crypto-cyan);
+}
+
+body.crypto-theme .btn-primary,
+body.crypto-theme .btn-secondary {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    padding: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1; /* Previene desajustes de altura de línea en botones */
+}
+
+/* Modal Overlay Transparente con Blur */
+body.crypto-theme .modal-overlay {
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* =========================================
+   TOAST NOTIFICATION SYSTEM
+   ========================================= */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.toast-notification {
+    background: rgba(10, 10, 10, 0.95);
+    border: 1px solid var(--crypto-border);
+    border-radius: 8px;
+    padding: 15px 20px;
+    color: var(--crypto-text);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    pointer-events: auto;
+    animation: toastSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    max-width: 350px;
+    width: 100%;
+}
+
+.toast-notification.toast-closing {
+    animation: toastFadeOut 0.3s ease forwards;
+}
+
+@keyframes toastSlideIn {
+    0% { opacity: 0; transform: translateX(100%); }
+    100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastFadeOut {
+    0% { opacity: 1; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(100%); }
+}
+
+.toast-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.toast-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.toast-close {
+    background: transparent;
+    border: none;
+    color: var(--crypto-muted);
+    cursor: pointer;
+    padding: 4px;
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.toast-close:hover {
+    color: var(--crypto-text);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Variantes */
+.toast-error {
+    border-left: 4px solid var(--danger-color);
+    box-shadow: -2px 0 15px rgba(248, 81, 73, 0.15), 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.toast-error .toast-icon { stroke: var(--danger-color); }
+
+.toast-success {
+    border-left: 4px solid var(--crypto-accent);
+    box-shadow: -2px 0 15px rgba(0, 230, 118, 0.15), 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.toast-success .toast-icon { stroke: var(--crypto-accent); }
+
+.toast-warning {
+    border-left: 4px solid #F1C40F;
+    box-shadow: -2px 0 15px rgba(241, 196, 15, 0.15), 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.toast-warning .toast-icon { stroke: #F1C40F; }
+
+.toast-info {
+    border-left: 4px solid var(--crypto-cyan);
+    box-shadow: -2px 0 15px rgba(0, 240, 255, 0.15), 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.toast-info .toast-icon { stroke: var(--crypto-cyan); }
+
+@media (max-width: 480px) {
+    .toast-container {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+    }
+    .toast-notification {
+        max-width: 100%;
+    }
+}
+
+/* =========================================
+   SWEETALERT2 CUSTOM CRYPTO THEME
+   ========================================= */
+.crypto-swal-popup {
+    border: 1px solid var(--crypto-border);
+    border-radius: 8px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 20px !important;
+}
+
+.crypto-swal-popup.swal-danger { border-top: 3px solid var(--danger-color); box-shadow: 0 10px 40px rgba(248, 81, 73, 0.1) !important; }
+.crypto-swal-popup.swal-warning { border-top: 3px solid #F1C40F; box-shadow: 0 10px 40px rgba(241, 196, 15, 0.1) !important; }
+.crypto-swal-popup.swal-info { border-top: 3px solid var(--crypto-cyan); box-shadow: 0 10px 40px rgba(0, 240, 255, 0.1) !important; }
+.crypto-swal-popup.swal-success { border-top: 3px solid var(--crypto-accent); box-shadow: 0 10px 40px rgba(0, 230, 118, 0.1) !important; }
+
+.crypto-swal-title {
+    color: var(--crypto-text) !important;
+    font-family: var(--font-mono) !important;
+    font-size: 1.2rem !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0 !important;
+}
+
+.crypto-swal-content {
+    margin-top: 15px !important;
+}
+
+.crypto-swal-actions {
+    margin-top: 25px !important;
+    gap: 15px !important;
+    width: 100% !important;
+}
+
+.crypto-swal-confirm, .crypto-swal-cancel {
+    flex: 1;
+    margin: 0 !important;
+    font-family: var(--font-mono) !important;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    padding: 12px;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1;
+    background: transparent !important;
+}
+
+.crypto-swal-confirm {
+    border: 1px solid var(--crypto-accent) !important;
+    color: var(--crypto-accent) !important;
+}
+.crypto-swal-confirm:hover {
+    background: rgba(0, 230, 118, 0.1) !important;
+    box-shadow: 0 0 15px rgba(0, 230, 118, 0.3) !important;
+}
+
+.crypto-swal-popup.swal-danger .crypto-swal-confirm {
+    border: 1px solid var(--danger-color) !important;
+    color: var(--danger-color) !important;
+}
+.crypto-swal-popup.swal-danger .crypto-swal-confirm:hover {
+    background: rgba(248, 81, 73, 0.1) !important;
+    box-shadow: 0 0 15px rgba(248, 81, 73, 0.3) !important;
+}
+
+.crypto-swal-cancel {
+    border: 1px solid var(--crypto-muted) !important;
+    color: var(--crypto-muted) !important;
+}
+.crypto-swal-cancel:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: var(--crypto-text) !important;
+}
+
+.crypto-swal-icon {
+    border: none !important;
+    margin: 0 auto 15px auto !important;
+    width: 60px !important;
+    height: 60px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.crypto-swal-icon svg {
+    width: 40px;
+    height: 40px;
+}
+
+body.crypto-theme .btn-primary {
+    background: transparent;
+    color: var(--crypto-accent);
+    border: 1px solid var(--crypto-accent);
+    box-shadow: inset 0 0 10px rgba(0, 230, 118, 0.1);
+}
+
+body.crypto-theme .btn-primary:hover {
+    background: rgba(0, 230, 118, 0.1);
+    box-shadow: 0 0 15px rgba(0, 230, 118, 0.2), inset 0 0 20px rgba(0, 230, 118, 0.2);
+    transform: translateY(-1px);
+}
+
+body.crypto-theme .btn-secondary {
+    background: transparent;
+    color: var(--crypto-text);
+    border: 1px dashed rgba(255, 255, 255, 0.2) !important;
+}
+
+body.crypto-theme .btn-secondary:hover {
+    border-color: var(--crypto-accent) !important;
+    color: var(--crypto-accent);
+    background: rgba(0, 230, 118, 0.05);
+}
+
+body.crypto-theme .modal-footer {
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    background: rgba(0, 0, 0, 0.5);
+    border-top: 1px dashed rgba(255,255,255,0.1);
+    color: var(--crypto-muted);
+    padding: 12px;
+    font-size: 0.7rem;
+}
+
+body.crypto-theme a.tech-link {
+    font-family: var(--font-mono);
+    color: var(--crypto-muted) !important;
+    transition: color 0.2s, text-shadow 0.2s;
+}
+
+body.crypto-theme a.tech-link:hover {
+    color: var(--crypto-cyan) !important;
+    text-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+}
+
+/* Glitch effect on hover for header title */
+body.crypto-theme .modal-header h2:hover {
+    animation: glitch 0.2s cubic-bezier(.25, .46, .45, .94) both infinite;
+}
+
+@keyframes glitch {
+  0% { transform: translate(0) }
+  20% { transform: translate(-2px, 1px) }
+  40% { transform: translate(-1px, -1px) }
+  60% { transform: translate(2px, 1px) }
+  80% { transform: translate(1px, -1px) }
+  100% { transform: translate(0) }
+}
+
+/* =========================================
+   CHAT.HTML REDESIGN
+   ========================================= */
+
+/* Container & Layout */
+body.crypto-theme .container {
+    background: var(--crypto-panel);
+    border: 1px solid var(--crypto-border);
+    border-radius: 8px;
+    box-shadow: 0 0 40px rgba(0, 230, 118, 0.03), inset 0 0 20px rgba(0, 230, 118, 0.02);
+    overflow: hidden;
+}
+
+body.crypto-theme .sidebar {
+    background: rgba(0, 0, 0, 0.4);
+    border-right: 1px solid var(--crypto-border);
+}
+
+body.crypto-theme .sidebar-header {
+    border-bottom: 1px dashed var(--crypto-border);
+    background: rgba(0, 230, 118, 0.02);
+}
+
+/* User Items */
+body.crypto-theme .user-item {
+    font-family: var(--font-mono);
+    border-radius: 4px;
+    margin-bottom: 4px;
+    border-left: 2px solid transparent;
+    transition: all 0.2s ease;
+    background: transparent;
+}
+
+body.crypto-theme .user-item:hover {
+    background: rgba(0, 230, 118, 0.05);
+    border-left: 2px solid rgba(0, 230, 118, 0.4);
+}
+
+body.crypto-theme .user-item.active {
+    background: rgba(0, 230, 118, 0.1);
+    border-left: 2px solid var(--crypto-accent);
+}
+
+body.crypto-theme .user-item strong {
+    color: var(--crypto-text);
+    font-weight: normal;
+}
+
+body.crypto-theme .user-item small {
+    color: var(--crypto-muted) !important;
+}
+
+/* Chat Header */
+body.crypto-theme .chat-header {
+    border-bottom: 1px dashed var(--crypto-border);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 15px 20px;
+}
+
+body.crypto-theme .chat-header h3 {
+    font-family: var(--font-mono);
+    color: var(--crypto-text);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+body.crypto-theme .status-badge {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: rgba(0, 230, 118, 0.1);
+    color: var(--crypto-accent);
+    border: 1px solid rgba(0, 230, 118, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Chat Messages */
+body.crypto-theme .chat-messages {
+    background: transparent;
+    padding: 24px;
+}
+
+body.crypto-theme .message {
+    font-family: 'Inter', sans-serif;
+    border-radius: 6px;
+    padding: 12px 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    position: relative;
+    max-width: 80%;
+    margin-bottom: 16px;
+}
+
+body.crypto-theme .message .text {
+    line-height: 1.5;
+    color: var(--crypto-text);
+}
+
+body.crypto-theme .message.me {
+    background: rgba(0, 230, 118, 0.08);
+    border: 1px solid rgba(0, 230, 118, 0.2);
+    border-bottom-right-radius: 0;
+    margin-left: auto;
+}
+
+body.crypto-theme .message.them {
+    background: rgba(0, 240, 255, 0.08);
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    border-bottom-left-radius: 0;
+    margin-right: auto;
+}
+
+body.crypto-theme .message .time {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--crypto-muted);
+    margin-top: 6px;
+    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Indicators */
+body.crypto-theme .message.me .time::after {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="%2300E676" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><polyline points="20 6 9 17 4 12"></polyline></svg>');
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.8;
+}
+
+/* Chat Input Area */
+body.crypto-theme .chat-input-area {
+    border-top: 1px dashed var(--crypto-border);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 15px 20px;
+}
+
+body.crypto-theme .chat-input-area input[type="text"] {
+    font-family: var(--font-mono);
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--crypto-accent);
+    border-radius: 4px;
+    padding: 12px 16px;
+    transition: all 0.3s ease;
+}
+
+body.crypto-theme .chat-input-area input[type="text"]:focus {
+    border-color: var(--crypto-accent);
+    box-shadow: inset 0 0 8px rgba(0, 230, 118, 0.1);
+    outline: none;
+}
+
+body.crypto-theme .chat-input-area input[type="text"]:disabled {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.02);
+    color: var(--crypto-muted);
+    cursor: not-allowed;
+}
+
+body.crypto-theme .chat-input-area .btn-secondary {
+    border: 1px dashed rgba(255, 255, 255, 0.1) !important;
+    background: transparent !important;
+    color: var(--crypto-muted);
+    transition: all 0.2s ease;
+}
+
+body.crypto-theme .chat-input-area .btn-secondary:hover:not(:disabled) {
+    border-color: var(--crypto-accent) !important;
+    color: var(--crypto-accent);
+    background: rgba(0, 230, 118, 0.05) !important;
+}
+
+body.crypto-theme .chat-input-area .btn-secondary:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+body.crypto-theme #ephemeral-select {
+    background: rgba(0,0,0,0.8) !important;
+    color: var(--crypto-text) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 4px !important;
+    font-family: var(--font-mono);
+    appearance: none;
+}
+body.crypto-theme #ephemeral-select:focus {
+    border-color: var(--crypto-accent) !important;
+}
+
+body.crypto-theme .chat-input-area #btn-send {
+    font-family: var(--font-mono);
+    background: transparent;
+    border: 1px solid var(--crypto-accent);
+    color: var(--crypto-accent);
+    text-transform: uppercase;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+body.crypto-theme .chat-input-area #btn-send:hover:not(:disabled) {
+    background: rgba(0, 230, 118, 0.1);
+    box-shadow: 0 0 15px rgba(0, 230, 118, 0.2);
+    transform: translateY(-1px);
+}
+
+body.crypto-theme .chat-input-area #btn-send:disabled {
+    border-color: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.2);
+    background: transparent;
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
+}
+
+/* Small SVGs for UI Buttons */
+body.crypto-theme .ui-icon-svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    fill: none;
+    transition: all 0.2s ease;
+}
+
+/* Scrollbar para crypto-theme */
+body.crypto-theme ::-webkit-scrollbar-thumb {
+    background: rgba(0, 230, 118, 0.2);
+    border-radius: 4px;
+}
+body.crypto-theme ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 230, 118, 0.4);
+}
+
+/* Empty State / Selecciona Contacto */
+body.crypto-theme .empty-state-chat {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: var(--crypto-muted);
+    font-family: var(--font-mono);
+    text-align: center;
+    opacity: 0.6;
+}
+body.crypto-theme .empty-state-chat svg {
+    width: 64px;
+    height: 64px;
+    stroke: var(--crypto-accent);
+    margin-bottom: 16px;
+    filter: drop-shadow(0 0 10px rgba(0, 230, 118, 0.2));
+}
+
+/* Edit & Delete Action Buttons */
+body.crypto-theme .message-actions {
+    position: absolute;
+    top: -12px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+    background: var(--crypto-panel);
+    padding: 4px;
+    border-radius: 4px;
+    border: 1px solid var(--crypto-border);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+body.crypto-theme .message:hover .message-actions {
+    opacity: 1;
+}
+
+body.crypto-theme .message-actions button {
+    background: transparent;
+    border: none;
+    color: var(--crypto-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+body.crypto-theme .message-actions button:hover {
+    color: var(--crypto-accent);
+    background: rgba(0, 230, 118, 0.1);
+}
+
+body.crypto-theme .message-actions button.btn-delete:hover {
+    color: var(--danger-color);
+    background: rgba(248, 81, 73, 0.1);
+}

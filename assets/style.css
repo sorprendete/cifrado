@@ -664,7 +664,83 @@ body {
     box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2) !important;
 }
 
-@media (max-width: 768px) { .app-container { flex-direction: column; } .sidebar { width: 100%; border-right: none; flex: 1; display: flex; } .chat-area { display: none; width: 100%; flex: 1; } .visualizer-area { display: none !important; } .sidebar.mobile-hidden { display: none; } .chat-area.mobile-visible { display: flex; } #btn-back-mobile { display: inline-block !important; } }
+/* --- Media Queries para Responsividad (Móvil y Tablet) --- */
+@media (max-width: 768px) {
+    body {
+        padding: 0;
+    }
+    
+    .container {
+        width: 100% !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        border: none !important;
+    }
+    
+    #app-container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100% !important;
+        border-right: none;
+        flex: 1;
+        display: flex;
+    }
+    
+    .chat-area {
+        display: none; /* Oculto por defecto en móvil para dar paso al sidebar */
+        width: 100%;
+        flex: 1;
+    }
+    
+    .visualizer-area {
+        display: none !important; /* Ocultar para maximizar espacio */
+    }
+    
+    .sidebar.mobile-hidden {
+        display: none;
+    }
+    
+    .chat-area.mobile-visible {
+        display: flex;
+    }
+    
+    #btn-back-mobile {
+        display: inline-block !important;
+    }
+    
+    .message {
+        max-width: 85%; /* Más ancho en móvil para mejor legibilidad */
+    }
+}
+
+@media (max-width: 480px) {
+    .modal {
+        width: 92% !important;
+        border-radius: 20px;
+    }
+    
+    .modal-header {
+        padding: 24px 20px 10px 20px;
+    }
+    
+    .modal-body {
+        padding: 0 20px 24px 20px;
+    }
+    
+    .chat-input {
+        padding: 12px 16px;
+    }
+    
+    .chat-header {
+        padding: 12px 16px;
+    }
+    
+    .chat-messages {
+        padding: 16px;
+    }
+}
 
 .chat-image { max-width: 100%; border-radius: 8px; margin-top: 5px; cursor: pointer; }
 .chat-audio { width: 100%; margin-top: 5px; border-radius: 8px; outline: none; }

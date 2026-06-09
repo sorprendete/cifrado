@@ -4,7 +4,8 @@ header('Content-Type: application/json');
 
 $nombre = trim(strtolower($_GET['nombre'] ?? ''));
 
-if (empty($nombre)) {
+// Validar longitud y formato para prevenir enumeraci\u00f3n masiva (fuzzing)
+if (empty($nombre) || strlen($nombre) > 50 || !preg_match('/^[a-z0-9_]+$/', $nombre)) {
     echo json_encode(['success' => true, 'existe' => false]);
     exit;
 }

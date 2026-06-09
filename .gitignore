@@ -21,3 +21,6 @@ yarn-error.log*
 
 # Script local de base de datos
 reset_db.php
+
+# Configuracion local privada
+api/config.php

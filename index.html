@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self';">
     <title>Bóveda E2EE - Ingreso</title>
     <link rel="stylesheet" href="assets/style.css">
     <link rel="stylesheet" href="css/style.css">
@@ -93,16 +95,6 @@
                 iconElement.style.filter = 'grayscale(1)';
             }
         }
-
-        // Acceso oculto a la documentación con 5 clics en el candado
-        let lockClicks = 0;
-        document.querySelector('.icon-lock').addEventListener('click', () => {
-            lockClicks++;
-            if (lockClicks >= 5) {
-                window.open('docs.html', '_blank');
-                lockClicks = 0;
-            }
-        });
     </script>
 </body>
 </html>

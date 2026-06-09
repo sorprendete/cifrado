@@ -3,10 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="DENY">
     <title>Whitepaper Dinámico: Motor Criptográfico E2EE</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<script>
+    // Guard: solo usuarios autenticados pueden ver la documentación
+    if (!localStorage.getItem('e2ee_identity')) {
+        window.location.replace('index.html');
+    }
+</script>
 
 <div class="container">
     <a href="index.html" class="btn-back">← Volver al Inicio</a>

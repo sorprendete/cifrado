@@ -9,10 +9,25 @@ if (!isset($data['nombre']) || !isset($data['llave_publica']) || !isset($data['b
     exit;
 }
 
-$nombre = trim($data['nombre']);
+$nombre = strtolower(trim($data['nombre']));
 $alias_publico = trim($data['alias_publico']);
 $llave_publica = trim($data['llave_publica']);
 $boveda_cifrada = trim($data['boveda_cifrada']);
+
+// Validar longitud máxima para prevenir DoS
+if (strlen($nombre) > 50 || strlen($alias_publico) > 50 || strlen($llave_publica) > 2000 || strlen($boveda_cifrada) > 4000) {
+    echo json_encode(['error' => 'Datos demasiado largos']);
+    exit;
+}
+
+// Validar formato del nombre (solo letras, números, guiones bajos)
+if (!preg_match('/^[a-z0-9_]+$/', $nombre)) {
+    echo json_encode(['error' => 'El nombre de usuario solo puede contener letras, números y guiones bajos']);
+    exit;
+}
+
+// Sanitizar alias para prevenir XSS almacenado
+$alias_publico = htmlspecialchars($alias_publico, ENT_QUOTES, 'UTF-8');
 
 // Validación estricta para evitar choques con el cliente antiguo (Diffie-Hellman en Caché)
 if (strpos($llave_publica, ',') === false) {

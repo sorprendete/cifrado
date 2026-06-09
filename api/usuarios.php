@@ -1,8 +1,17 @@
 <?php
 require 'db.php';
+require 'auth.php';
 header('Content-Type: application/json');
 
 $usuario_id = $_GET['usuario_id'] ?? null;
+$token_sesion = $_GET['token_sesion'] ?? null;
+
+// Proteger el listado de usuarios con autenticaci\u00f3n obligatoria
+if (!$usuario_id) {
+    echo json_encode(['error' => 'No autenticado']);
+    exit;
+}
+validar_sesion($usuario_id, $token_sesion, $pdo);
 
 try {
     if ($usuario_id) {

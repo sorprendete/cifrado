@@ -1,9 +1,11 @@
 <?php
-$host = '127.0.0.1';
-$db   = 'db_mensajeria';
-$user = 'root';
-$pass = '';
-$charset = 'utf8mb4';
+require_once __DIR__ . '/config.php';
+
+$host = DB_HOST;
+$db   = DB_NAME;
+$user = DB_USER;
+$pass = DB_PASS;
+$charset = DB_CHARSET;
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
 $options = [
@@ -65,7 +67,7 @@ try {
 }
 
 // Helpers para ofuscación transparente de IDs de usuario en base de datos
-define('ID_ENCRYPTION_KEY', 'unsm_seguridad_secreta_2026');
+// ID_ENCRYPTION_KEY ya está definido en config.php
 
 function ofuscar_id($id) {
     if (empty($id)) return '';

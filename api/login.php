@@ -18,20 +18,22 @@ if (!isset($data['action']) || !isset($data['nombre'])) {
 $action = trim($data['action']);
 $nombre = trim(strtolower($data['nombre']));
 
-// Constantes criptográficas compartidas con crypto.js
-$q = 9999991;
-$g = 735; // Primer generador de la matriz pública
+// Constantes criptográficas compartidas con crypto.js (Primo seguro de 256 bits)
+$q = '115792089237316195423570985008687907853269984665640564039457584007913129639747';
+$g = '735'; // Primer generador de la matriz pública
 
-// Función auxiliar de exponenciación modular
+// Función auxiliar de exponenciación modular usando BC Math puro para evitar desbordamientos
 function modExp($base, $exp, $mod) {
-    $res = 1;
-    $base = $base % $mod;
-    while ($exp > 0) {
-        if ($exp % 2 == 1) {
-            $res = (int)bcmod(bcmul($res, $base), $mod);
+    $res = '1';
+    $base = bcmod((string)$base, (string)$mod);
+    $exp = (string)$exp;
+    $mod = (string)$mod;
+    while (bccomp($exp, '0') > 0) {
+        if (bcmod($exp, '2') === '1') {
+            $res = bcmod(bcmul($res, $base), $mod);
         }
-        $base = (int)bcmod(bcmul($base, $base), $mod);
-        $exp = (int)floor($exp / 2);
+        $base = bcmod(bcmul($base, $base), $mod);
+        $exp = bcdiv($exp, '2', 0);
     }
     return $res;
 }
@@ -48,11 +50,10 @@ try {
 
     if ($action === 'get_challenge') {
         // Generar un exponente secreto temporal para el desafío del servidor
-        $r = random_int(100000, 999000);
+        $r = (string)random_int(100000000, 999999999);
         // T = g^r (mod q)
-        // Usar BC Math si está disponible para evitar problemas de precisión en enteros de 32 bits
         if (function_exists('bcpowmod')) {
-            $T = (int)bcpowmod($g, $r, $q);
+            $T = bcpowmod($g, $r, $q);
         } else {
             $T = modExp($g, $r, $q);
         }
@@ -88,17 +89,16 @@ try {
 
         // Obtener la llave pública del usuario (primer elemento del vector)
         $public_vector = explode(',', $user['llave_publica']);
-        $Y_0 = (int)$public_vector[0];
+        $Y_0 = $public_vector[0];
 
         // Calcular S_verify = (Y_0)^r (mod q)
         if (function_exists('bcpowmod')) {
-            $S_verify = (int)bcpowmod($Y_0, $r, $q);
+            $S_verify = bcpowmod($Y_0, $r, $q);
         } else {
             $S_verify = modExp($Y_0, $r, $q);
         }
 
         // Validar la prueba hash: sha256(S_verify)
-        // Como implementamos SHA-256 en PHP nativo:
         $prueba_servidor = hash('sha256', (string)$S_verify);
 
         if ($prueba_cliente === $prueba_servidor) {
